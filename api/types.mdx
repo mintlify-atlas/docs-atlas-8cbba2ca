@@ -138,6 +138,22 @@ A map of block IDs to their x and y positions (using `offsetLeft` and `offsetTop
 
 ## Constants
 
+### version
+
+The current package version string, exported from package.json.
+
+```typescript
+export { version } from "./package.json";
+```
+
+This is useful for debugging or logging:
+
+```typescript
+import { version } from 'torph';
+
+console.log(`Using Torph v${version}`);
+```
+
 ### DEFAULT_TEXT_MORPH_OPTIONS
 
 Default configuration values for TextMorph.
