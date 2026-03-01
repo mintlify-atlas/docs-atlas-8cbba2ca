@@ -1,0 +1,89 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Torph",
+  "projectDescription": "Dependency-free animated text morphing component for React, Vue, Svelte, and Vanilla JavaScript.",
+  "theme": "palm",
+  "primaryColor": "#A855F7",
+  "lightColor": "#C084FC",
+  "darkColor": "#7C3AED",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Framework Guides",
+            "pages": [
+              "frameworks/react",
+              "frameworks/vue",
+              "frameworks/svelte",
+              "frameworks/vanilla"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/text-morph",
+              "api/configuration",
+              "api/types"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/animation-details",
+              "advanced/performance",
+              "advanced/accessibility"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Examples",
+        "groups": [
+          {
+            "group": "Use Cases",
+            "pages": [
+              "examples/basic-usage",
+              "examples/dynamic-content",
+              "examples/styling",
+              "examples/callbacks"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Framework-agnostic with React, Vue, and Svelte wrappers",
+    "Zero dependencies for lightweight integration",
+    "Smooth FLIP-based text morphing animations",
+    "Customizable duration and easing functions",
+    "Built-in accessibility support with reduced motion detection",
+    "Debug mode for visual animation debugging"
+  ],
+  "publicApiSurface": [
+    "TextMorph (core class)",
+    "TextMorph component (React)",
+    "useTextMorph hook (React)",
+    "TextMorph component (Vue)",
+    "TextMorph component (Svelte)",
+    "TextMorphOptions interface",
+    "duration option",
+    "ease option",
+    "locale option",
+    "debug option",
+    "disabled option",
+    "respectReducedMotion option",
+    "onAnimationStart callback",
+    "onAnimationComplete callback"
+  ]
+}
