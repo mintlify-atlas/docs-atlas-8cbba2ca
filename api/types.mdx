@@ -1,0 +1,239 @@
+---
+title: Types
+description: TypeScript type definitions and interfaces for Torph
+---
+
+## TextMorphOptions
+
+Configuration options interface for the TextMorph class.
+
+```typescript
+export interface TextMorphOptions {
+  debug?: boolean;
+  element: HTMLElement;
+  locale?: Intl.LocalesArgument;
+  scale?: boolean;
+  duration?: number; // in ms
+  ease?: string; // css cubic-bezier
+  disabled?: boolean;
+  respectReducedMotion?: boolean;
+  onAnimationStart?: () => void;
+  onAnimationComplete?: () => void;
+}
+```
+
+### Properties
+
+<ResponseField name="element" type="HTMLElement" required>
+  The DOM element that will contain the morphing text.
+</ResponseField>
+
+<ResponseField name="duration" type="number">
+  Animation duration in milliseconds. Default: `400`
+</ResponseField>
+
+<ResponseField name="ease" type="string">
+  CSS cubic-bezier easing function. Default: `"cubic-bezier(0.19, 1, 0.22, 1)"`
+</ResponseField>
+
+<ResponseField name="locale" type="Intl.LocalesArgument">
+  Locale for text segmentation. Default: `"en"`
+  
+  Can be a string, array of strings, or Intl.Locale object.
+</ResponseField>
+
+<ResponseField name="scale" type="boolean">
+  Whether to scale entering/exiting characters. Default: `true`
+</ResponseField>
+
+<ResponseField name="disabled" type="boolean">
+  Disables all animations. Default: `false`
+</ResponseField>
+
+<ResponseField name="respectReducedMotion" type="boolean">
+  Respects user's prefers-reduced-motion setting. Default: `true`
+</ResponseField>
+
+<ResponseField name="debug" type="boolean">
+  Enables debug mode with visual outlines. Default: `false`
+</ResponseField>
+
+<ResponseField name="onAnimationStart" type="() => void">
+  Callback fired when animation starts.
+</ResponseField>
+
+<ResponseField name="onAnimationComplete" type="() => void">
+  Callback fired when animation completes.
+</ResponseField>
+
+## Built-in types
+
+### Intl.LocalesArgument
+
+The locale argument type from the ECMAScript Internationalization API.
+
+```typescript
+type LocalesArgument = string | string[] | Intl.Locale | undefined;
+```
+
+#### Examples
+
+```typescript
+// String
+const morph1 = new TextMorph({
+  element,
+  locale: 'en-US'
+});
+
+// Array of strings (fallback chain)
+const morph2 = new TextMorph({
+  element,
+  locale: ['ja-JP', 'en-US']
+});
+
+// Intl.Locale object
+const morph3 = new TextMorph({
+  element,
+  locale: new Intl.Locale('fr-FR')
+});
+```
+
+## Internal types
+
+These types are used internally by the TextMorph implementation and are not exported.
+
+### Block
+
+Represents a text segment (character or word) with a unique identifier.
+
+```typescript
+type Block = {
+  id: string;
+  string: string;
+};
+```
+
+<ResponseField name="id" type="string">
+  Unique identifier for the text segment. Can be:
+  - The character/word itself (for first occurrence)
+  - `{character}-{index}` (for duplicate characters)
+  - `space-{index}` (for spaces)
+</ResponseField>
+
+<ResponseField name="string" type="string">
+  The actual text content. Spaces are converted to non-breaking spaces (`\u00A0`).
+</ResponseField>
+
+### Measures
+
+Position measurements for text blocks.
+
+```typescript
+type Measures = {
+  [key: string]: { x: number; y: number };
+};
+```
+
+A map of block IDs to their x and y positions (using `offsetLeft` and `offsetTop`).
+
+## Constants
+
+### DEFAULT_TEXT_MORPH_OPTIONS
+
+Default configuration values for TextMorph.
+
+```typescript
+export const DEFAULT_TEXT_MORPH_OPTIONS = {
+  debug: false,
+  locale: "en",
+  duration: 400,
+  scale: true,
+  ease: "cubic-bezier(0.19, 1, 0.22, 1)",
+  disabled: false,
+  respectReducedMotion: true,
+} as const satisfies Omit<TextMorphOptions, "element">;
+```
+
+<Note>
+  The type annotation `as const satisfies Omit<TextMorphOptions, "element">` ensures that:
+  1. Values are readonly literals
+  2. All required optional properties are present
+  3. The `element` property is correctly excluded (since it's required)
+</Note>
+
+### DEFAULT_AS
+
+Default HTML element tag for framework components.
+
+```typescript
+export const DEFAULT_AS = "div";
+```
+
+Used by React, Vue, and Svelte wrapper components to determine the default container element.
+
+## Type guards
+
+You can create type guards for runtime validation:
+
+```typescript
+function isTextMorphOptions(obj: unknown): obj is TextMorphOptions {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'element' in obj &&
+    obj.element instanceof HTMLElement
+  );
+}
+```
+
+## Usage with TypeScript
+
+### Importing types
+
+```typescript
+import { TextMorph, type TextMorphOptions } from 'torph';
+
+const options: TextMorphOptions = {
+  element: document.querySelector('#morph')!,
+  duration: 500,
+  ease: 'cubic-bezier(0.19, 1, 0.22, 1)',
+};
+
+const morph = new TextMorph(options);
+```
+
+### Partial options
+
+```typescript
+import type { TextMorphOptions } from 'torph';
+
+type PartialTextMorphOptions = Partial<Omit<TextMorphOptions, 'element'>> & {
+  element: HTMLElement;
+};
+
+function createMorph(options: PartialTextMorphOptions) {
+  return new TextMorph(options);
+}
+```
+
+### Extending options
+
+```typescript
+import type { TextMorphOptions } from 'torph';
+
+interface ExtendedOptions extends TextMorphOptions {
+  customAnimation?: boolean;
+  theme?: 'light' | 'dark';
+}
+
+function createThemedMorph(options: ExtendedOptions) {
+  const { customAnimation, theme, ...morphOptions } = options;
+  
+  // Apply theme-specific settings
+  if (theme === 'dark') {
+    options.element.classList.add('dark-theme');
+  }
+  
+  return new TextMorph(morphOptions);
+}
+```

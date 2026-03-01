@@ -1,0 +1,118 @@
+---
+title: Introduction
+description: Dependency-free animated text morphing component for React, Vue, Svelte, and Vanilla JS
+---
+
+# Introduction to Torph
+
+Torph is a lightweight, dependency-free animated text morphing component that brings smooth, fluid text transitions to your web applications. Perfect for dynamic headlines, status updates, pricing displays, and any text that changes over time.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running with Torph in under 2 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Detailed setup instructions for your framework
+  </Card>
+</CardGroup>
+
+## Why Torph?
+
+**Zero dependencies** - No bloat, just pure text morphing magic
+
+**Framework agnostic** - Works seamlessly with React, Vue, Svelte, or Vanilla JS
+
+**Smooth animations** - Beautiful FLIP animations that respect reduced motion preferences
+
+**Tiny footprint** - Minimal bundle size impact on your application
+
+**Fully customizable** - Control duration, easing, scaling, and more
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Character-level morphing" icon="text">
+    Intelligently animates individual characters or words as text changes
+  </Card>
+  <Card title="Accessibility first" icon="universal-access">
+    Respects prefers-reduced-motion settings automatically
+  </Card>
+  <Card title="Smart segmentation" icon="brain">
+    Uses Intl.Segmenter for proper grapheme handling with fallback support
+  </Card>
+  <Card title="Flexible API" icon="sliders">
+    Simple defaults with full control over animation behavior
+  </Card>
+</CardGroup>
+
+## Quick example
+
+Here's a simple React example to get a taste of Torph:
+
+```tsx
+import { TextMorph } from "torph/react";
+import { useState, useEffect } from "react";
+
+const texts = [
+  "Animate Text Easily",
+  "Animate Text Effortlessly",
+  "Animate Text Seamlessly",
+];
+
+export default function App() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((i) => (i + 1) % texts.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <TextMorph>{texts[index]}</TextMorph>;
+}
+```
+
+## Use cases
+
+- **Dynamic headlines** - Rotate through marketing messages or announcements
+- **Live status updates** - Show changing connection states or processing steps
+- **Pricing displays** - Smoothly transition between price tiers or options
+- **Interactive forms** - Provide fluid feedback as users type or select options
+- **Counters and metrics** - Animate number changes with text formatting
+
+## Browser support
+
+Torph works in all modern browsers that support:
+- Web Animations API
+- CSS transforms and transitions
+- ES6+ JavaScript
+
+For optimal grapheme segmentation, browsers with `Intl.Segmenter` support are recommended, but a fallback is provided for older browsers.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart guide"
+    icon="bolt"
+    href="/quickstart"
+  >
+    Jump right in with a working example
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Install and configure for your framework
+  </Card>
+</CardGroup>

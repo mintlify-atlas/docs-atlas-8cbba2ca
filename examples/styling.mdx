@@ -1,0 +1,533 @@
+---
+title: Styling
+description: Customize the appearance of Torph text morphing components
+---
+
+## Using className
+
+Style your text morph component with CSS classes.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+    import './App.css';
+
+    export default function App() {
+      return (
+        <TextMorph className="hero-text">
+          Styled Text Morph
+        </TextMorph>
+      );
+    }
+    ```
+
+    ```css
+    /* App.css */
+    .hero-text {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #6366f1;
+      text-align: center;
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Styled Text Morph" class="hero-text" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+
+    <style scoped>
+    .hero-text {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #6366f1;
+      text-align: center;
+    }
+    </style>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Styled Text Morph" class="hero-text" />
+
+    <style>
+      :global(.hero-text) {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #6366f1;
+        text-align: center;
+      }
+    </style>
+    ```
+  </Tab>
+</Tabs>
+
+## Inline styles
+
+Apply inline styles directly to the component.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph
+          style={{
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            color: '#ec4899',
+            letterSpacing: '0.05em',
+          }}
+        >
+          Inline Styled Text
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        text="Inline Styled Text" 
+        :style="{
+          fontSize: '2.5rem',
+          fontWeight: 'bold',
+          color: '#ec4899',
+          letterSpacing: '0.05em',
+        }"
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph 
+      text="Inline Styled Text" 
+      style="font-size: 2.5rem; font-weight: bold; color: #ec4899; letter-spacing: 0.05em;"
+    />
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  In Svelte, the `style` prop accepts a string. In React and Vue, it accepts an object.
+</Note>
+
+## Gradient text
+
+Create beautiful gradient text effects.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+    import './App.css';
+
+    export default function App() {
+      return (
+        <TextMorph className="gradient-text">
+          Gradient Animation
+        </TextMorph>
+      );
+    }
+    ```
+
+    ```css
+    /* App.css */
+    .gradient-text {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Gradient Animation" class="gradient-text" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+
+    <style scoped>
+    .gradient-text {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    </style>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Gradient Animation" class="gradient-text" />
+
+    <style>
+      :global(.gradient-text) {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+    ```
+  </Tab>
+</Tabs>
+
+## Text shadows
+
+Add depth with text shadows.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph
+          style={{
+            fontSize: '3rem',
+            fontWeight: 'bold',
+            color: '#ffffff',
+            textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          Shadow Effect
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        text="Shadow Effect" 
+        :style="{
+          fontSize: '3rem',
+          fontWeight: 'bold',
+          color: '#ffffff',
+          textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+        }"
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph 
+      text="Shadow Effect" 
+      style="font-size: 3rem; font-weight: bold; color: #ffffff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);"
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Custom fonts
+
+Use custom fonts with Torph.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+    import './App.css';
+
+    export default function App() {
+      return (
+        <TextMorph className="custom-font">
+          Custom Typography
+        </TextMorph>
+      );
+    }
+    ```
+
+    ```css
+    /* App.css */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+    .custom-font {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Custom Typography" class="custom-font" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+
+    <style scoped>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+    .custom-font {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+    }
+    </style>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Custom Typography" class="custom-font" />
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+      :global(.custom-font) {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        font-weight: 700;
+      }
+    </style>
+    ```
+  </Tab>
+</Tabs>
+
+## Responsive sizing
+
+Make text responsive using CSS or framework utilities.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+    import './App.css';
+
+    export default function App() {
+      return (
+        <TextMorph className="responsive-text">
+          Responsive Design
+        </TextMorph>
+      );
+    }
+    ```
+
+    ```css
+    /* App.css */
+    .responsive-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    @media (min-width: 768px) {
+      .responsive-text {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .responsive-text {
+        font-size: 3.5rem;
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Responsive Design" class="responsive-text" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+
+    <style scoped>
+    .responsive-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    @media (min-width: 768px) {
+      .responsive-text {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .responsive-text {
+        font-size: 3.5rem;
+      }
+    }
+    </style>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Responsive Design" class="responsive-text" />
+
+    <style>
+      :global(.responsive-text) {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      @media (min-width: 768px) {
+        :global(.responsive-text) {
+          font-size: 2.5rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        :global(.responsive-text) {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    ```
+  </Tab>
+</Tabs>
+
+## With Tailwind CSS
+
+Torph works seamlessly with Tailwind CSS utility classes.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph className="text-4xl md:text-6xl font-bold text-indigo-600">
+          Tailwind Styled
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        text="Tailwind Styled" 
+        class="text-4xl md:text-6xl font-bold text-indigo-600"
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph 
+      text="Tailwind Styled" 
+      class="text-4xl md:text-6xl font-bold text-indigo-600"
+    />
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Torph renders as an inline-flex container by default. This works well with most CSS frameworks and custom styles.
+</Tip>
+
+## Debug mode
+
+Enable debug mode to visualize the text morph boundaries and individual character elements.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph debug>
+          Debug Mode Active
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Debug Mode Active" :debug="true" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Debug Mode Active" debug={true} />
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Debug mode adds magenta outlines to the root container and cyan outlines to individual text items. This helps visualize how Torph segments and animates your text.
+</Note>

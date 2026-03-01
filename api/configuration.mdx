@@ -1,0 +1,262 @@
+---
+title: Configuration
+description: Complete reference for all TextMorph configuration options
+---
+
+## TextMorphOptions
+
+All configuration options for the TextMorph class.
+
+```typescript
+interface TextMorphOptions {
+  element: HTMLElement;
+  duration?: number;
+  ease?: string;
+  locale?: Intl.LocalesArgument;
+  scale?: boolean;
+  disabled?: boolean;
+  respectReducedMotion?: boolean;
+  debug?: boolean;
+  onAnimationStart?: () => void;
+  onAnimationComplete?: () => void;
+}
+```
+
+## Required options
+
+<ParamField path="element" type="HTMLElement" required>
+  The DOM element that will contain the morphing text.
+  
+  This element will have the `torph-root` attribute added to it and will receive injected styles for positioning and transitions.
+  
+  ```typescript
+  const element = document.querySelector('#morph');
+  const morph = new TextMorph({ element });
+  ```
+</ParamField>
+
+## Animation options
+
+<ParamField path="duration" type="number" default="400">
+  Animation duration in milliseconds.
+  
+  Controls how long the morph transition takes. This affects:
+  - Character position transitions
+  - Entering/exiting character fade animations (entering: 25% of duration, exiting: 25% of duration)
+  - Container width/height transitions
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    duration: 600 // 600ms animation
+  });
+  ```
+</ParamField>
+
+<ParamField path="ease" type="string" default="cubic-bezier(0.19, 1, 0.22, 1)">
+  CSS cubic-bezier easing function for the animation.
+  
+  Defines the acceleration curve for the morph animation. Must be a valid CSS easing value.
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    ease: 'cubic-bezier(0.4, 0, 0.2, 1)' // Material Design standard easing
+  });
+  ```
+  
+  <Note>
+    Common easing values:
+    - `cubic-bezier(0.19, 1, 0.22, 1)` - Default smooth ease (recommended)
+    - `cubic-bezier(0.4, 0, 0.2, 1)` - Material Design standard
+    - `cubic-bezier(0.25, 0.1, 0.25, 1)` - Ease
+    - `linear` - No easing
+  </Note>
+</ParamField>
+
+<ParamField path="scale" type="boolean" default="true">
+  Whether to apply scale transformation to entering and exiting characters.
+  
+  When `true`, characters scale to 0.95 (95%) as they enter or exit, creating a subtle "pop" effect.
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    scale: false // Disable scale effect
+  });
+  ```
+</ParamField>
+
+## Localization
+
+<ParamField path="locale" type="Intl.LocalesArgument" default="en">
+  Locale for text segmentation using the Intl.Segmenter API.
+  
+  This determines how text is split into grapheme clusters or words. Important for proper handling of:
+  - Multi-byte characters (emoji, etc.)
+  - Complex scripts (Arabic, Devanagari, etc.)
+  - Word boundaries in different languages
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    locale: 'ja-JP' // Japanese locale
+  });
+  ```
+  
+  <Note>
+    In browsers without `Intl.Segmenter` support, Torph falls back to simple string splitting, which may not handle complex characters correctly.
+  </Note>
+</ParamField>
+
+## Behavior control
+
+<ParamField path="disabled" type="boolean" default="false">
+  Disables all animations when `true`.
+  
+  When disabled:
+  - Text updates instantly without animation
+  - No styles are injected
+  - No attributes are added to the element
+  - Callbacks are not fired
+  
+  Useful for server-side rendering or testing.
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    disabled: true
+  });
+  ```
+</ParamField>
+
+<ParamField path="respectReducedMotion" type="boolean" default="true">
+  Respects the user's `prefers-reduced-motion` system preference.
+  
+  When `true`, animations are automatically disabled if the user has enabled reduced motion in their system settings. This improves accessibility for users sensitive to motion.
+  
+  The preference is checked on initialization and monitored for changes during the instance lifetime.
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    respectReducedMotion: false // Ignore user preference (not recommended)
+  });
+  ```
+  
+  <Note>
+    It's strongly recommended to keep this enabled for accessibility compliance.
+  </Note>
+</ParamField>
+
+## Development
+
+<ParamField path="debug" type="boolean" default="false">
+  Enables debug mode with visual outlines.
+  
+  When enabled:
+  - The root element gets a magenta outline
+  - Each character span gets a cyan outline
+  - The element receives the `torph-debug` attribute
+  
+  Useful for development and debugging animation issues.
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    debug: true
+  });
+  ```
+</ParamField>
+
+## Callbacks
+
+<ParamField path="onAnimationStart" type="() => void">
+  Callback function fired when a morph animation starts.
+  
+  - Not called on the initial render
+  - Not called if animations are disabled
+  - Not called if the new value is identical to the current value
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    onAnimationStart: () => {
+      console.log('Animation started');
+    }
+  });
+  ```
+</ParamField>
+
+<ParamField path="onAnimationComplete" type="() => void">
+  Callback function fired when a morph animation completes.
+  
+  - Not called on the initial render
+  - Not called if animations are disabled
+  - Fires after the full animation duration
+  
+  ```typescript
+  const morph = new TextMorph({
+    element,
+    onAnimationComplete: () => {
+      console.log('Animation complete');
+    }
+  });
+  ```
+  
+  <Note>
+    Currently implemented using `setTimeout`. Future versions may use `transitionend` event listeners for more precise timing.
+  </Note>
+</ParamField>
+
+## Default values
+
+All defaults are defined in `DEFAULT_TEXT_MORPH_OPTIONS`:
+
+```typescript
+const DEFAULT_TEXT_MORPH_OPTIONS = {
+  debug: false,
+  locale: "en",
+  duration: 400,
+  scale: true,
+  ease: "cubic-bezier(0.19, 1, 0.22, 1)",
+  disabled: false,
+  respectReducedMotion: true,
+} as const;
+```
+
+## Complete example
+
+```typescript
+const element = document.querySelector('#morph-container');
+
+const morph = new TextMorph({
+  // Required
+  element,
+  
+  // Animation
+  duration: 500,
+  ease: 'cubic-bezier(0.19, 1, 0.22, 1)',
+  scale: true,
+  
+  // Localization
+  locale: 'en-US',
+  
+  // Behavior
+  disabled: false,
+  respectReducedMotion: true,
+  
+  // Development
+  debug: false,
+  
+  // Callbacks
+  onAnimationStart: () => {
+    console.log('Starting morph animation');
+  },
+  onAnimationComplete: () => {
+    console.log('Morph animation complete');
+  }
+});
+
+morph.update('Hello World');
+```

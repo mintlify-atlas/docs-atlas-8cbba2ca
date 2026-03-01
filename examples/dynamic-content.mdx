@@ -1,0 +1,569 @@
+---
+title: Dynamic content
+description: Examples of Torph with changing content and real-world use cases
+---
+
+## Rotating messages
+
+A common pattern is to cycle through an array of messages. Torph automatically animates between each text change.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState, useEffect } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    const texts = [
+      "Animate Text Easily",
+      "Animate Text Effortlessly",
+      "Animate Text Seamlessly",
+      "Fluidly Animate Text",
+    ];
+
+    export default function App() {
+      const [index, setIndex] = useState(0);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setIndex((i) => (i + 1) % texts.length);
+        }, 2000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div style={{ fontSize: '2rem' }}>
+          <TextMorph>{texts[index]}</TextMorph>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div class="container">
+        <TextMorph :text="text" />
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref, onMounted, onUnmounted, computed } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const texts = [
+      "Animate Text Easily",
+      "Animate Text Effortlessly",
+      "Animate Text Seamlessly",
+      "Fluidly Animate Text",
+    ];
+
+    const index = ref(0);
+    let interval: ReturnType<typeof setInterval>;
+
+    onMounted(() => {
+      interval = setInterval(() => {
+        index.value = (index.value + 1) % texts.length;
+      }, 2000);
+    });
+
+    onUnmounted(() => {
+      clearInterval(interval);
+    });
+
+    const text = computed(() => texts[index.value]);
+    </script>
+
+    <style scoped>
+    .container {
+      font-size: 2rem;
+    }
+    </style>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { onMount, onDestroy } from 'svelte';
+      import { TextMorph } from 'torph/svelte';
+
+      const texts = [
+        "Animate Text Easily",
+        "Animate Text Effortlessly",
+        "Animate Text Seamlessly",
+        "Fluidly Animate Text",
+      ];
+
+      let index = 0;
+      let interval: ReturnType<typeof setInterval>;
+
+      onMount(() => {
+        interval = setInterval(() => {
+          index = (index + 1) % texts.length;
+        }, 2000);
+      });
+
+      onDestroy(() => {
+        clearInterval(interval);
+      });
+
+      $: text = texts[index];
+    </script>
+
+    <div class="container">
+      <TextMorph {text} />
+    </div>
+
+    <style>
+      .container {
+        font-size: 2rem;
+      }
+    </style>
+    ```
+  </Tab>
+</Tabs>
+
+## Loading states
+
+Use Torph to create smooth transitions between loading states.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function LoadingButton() {
+      const [loading, setLoading] = useState(false);
+
+      const handleClick = async () => {
+        setLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setLoading(false);
+      };
+
+      return (
+        <button onClick={handleClick} disabled={loading}>
+          <TextMorph>
+            {loading ? 'Loading...' : 'Submit'}
+          </TextMorph>
+        </button>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <button @click="handleClick" :disabled="loading">
+        <TextMorph :text="buttonText" />
+      </button>
+    </template>
+
+    <script setup lang="ts">
+    import { ref, computed } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const loading = ref(false);
+
+    const buttonText = computed(() => 
+      loading.value ? 'Loading...' : 'Submit'
+    );
+
+    const handleClick = async () => {
+      loading.value = true;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      loading.value = false;
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let loading = false;
+
+      const handleClick = async () => {
+        loading = true;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        loading = false;
+      };
+
+      $: buttonText = loading ? 'Loading...' : 'Submit';
+    </script>
+
+    <button on:click={handleClick} disabled={loading}>
+      <TextMorph text={buttonText} />
+    </button>
+    ```
+  </Tab>
+</Tabs>
+
+## Live counter
+
+Animate number changes smoothly with Torph.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function Counter() {
+      const [count, setCount] = useState(0);
+
+      return (
+        <div>
+          <TextMorph as="span">{count.toString()}</TextMorph>
+          <button onClick={() => setCount(c => c + 1)}>
+            Increment
+          </button>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <TextMorph :text="count.toString()" as="span" />
+        <button @click="count++">Increment</button>
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const count = ref(0);
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let count = 0;
+    </script>
+
+    <div>
+      <TextMorph text={count.toString()} as="span" />
+      <button on:click={() => count++}>Increment</button>
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Convert numbers to strings for the TextMorph component. Each digit change will animate smoothly.
+</Tip>
+
+## Form feedback
+
+Provide dynamic feedback messages that morph smoothly as validation state changes.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function EmailForm() {
+      const [email, setEmail] = useState('');
+      const [message, setMessage] = useState('Enter your email');
+
+      const validate = (value: string) => {
+        if (!value) {
+          setMessage('Enter your email');
+        } else if (!value.includes('@')) {
+          setMessage('Invalid email address');
+        } else {
+          setMessage('Email looks good!');
+        }
+      };
+
+      return (
+        <div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              validate(e.target.value);
+            }}
+          />
+          <TextMorph as="p">{message}</TextMorph>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <input
+          type="email"
+          v-model="email"
+          @input="validate"
+        />
+        <TextMorph :text="message" as="p" />
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref, watch } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const email = ref('');
+    const message = ref('Enter your email');
+
+    const validate = () => {
+      if (!email.value) {
+        message.value = 'Enter your email';
+      } else if (!email.value.includes('@')) {
+        message.value = 'Invalid email address';
+      } else {
+        message.value = 'Email looks good!';
+      }
+    };
+
+    watch(email, validate);
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let email = '';
+      let message = 'Enter your email';
+
+      const validate = () => {
+        if (!email) {
+          message = 'Enter your email';
+        } else if (!email.includes('@')) {
+          message = 'Invalid email address';
+        } else {
+          message = 'Email looks good!';
+        }
+      };
+
+      $: email, validate();
+    </script>
+
+    <div>
+      <input type="email" bind:value={email} on:input={validate} />
+      <TextMorph text={message} as="p" />
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+## Notification messages
+
+Animate between different notification states.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    type Status = 'idle' | 'saving' | 'saved' | 'error';
+
+    export default function SaveStatus() {
+      const [status, setStatus] = useState<Status>('idle');
+
+      const messages: Record<Status, string> = {
+        idle: 'Ready to save',
+        saving: 'Saving changes...',
+        saved: 'All changes saved',
+        error: 'Failed to save',
+      };
+
+      const handleSave = async () => {
+        setStatus('saving');
+        try {
+          await new Promise((resolve, reject) => 
+            setTimeout(() => Math.random() > 0.5 ? resolve(null) : reject(), 1500)
+          );
+          setStatus('saved');
+        } catch {
+          setStatus('error');
+        }
+      };
+
+      return (
+        <div>
+          <button onClick={handleSave}>Save</button>
+          <TextMorph>{messages[status]}</TextMorph>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <button @click="handleSave">Save</button>
+        <TextMorph :text="messages[status]" />
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    type Status = 'idle' | 'saving' | 'saved' | 'error';
+
+    const status = ref<Status>('idle');
+
+    const messages: Record<Status, string> = {
+      idle: 'Ready to save',
+      saving: 'Saving changes...',
+      saved: 'All changes saved',
+      error: 'Failed to save',
+    };
+
+    const handleSave = async () => {
+      status.value = 'saving';
+      try {
+        await new Promise((resolve, reject) => 
+          setTimeout(() => Math.random() > 0.5 ? resolve(null) : reject(), 1500)
+        );
+        status.value = 'saved';
+      } catch {
+        status.value = 'error';
+      }
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      type Status = 'idle' | 'saving' | 'saved' | 'error';
+
+      let status: Status = 'idle';
+
+      const messages: Record<Status, string> = {
+        idle: 'Ready to save',
+        saving: 'Saving changes...',
+        saved: 'All changes saved',
+        error: 'Failed to save',
+      };
+
+      const handleSave = async () => {
+        status = 'saving';
+        try {
+          await new Promise((resolve, reject) => 
+            setTimeout(() => Math.random() > 0.5 ? resolve(null) : reject(), 1500)
+          );
+          status = 'saved';
+        } catch {
+          status = 'error';
+        }
+      };
+    </script>
+
+    <div>
+      <button on:click={handleSave}>Save</button>
+      <TextMorph text={messages[status]} />
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+## Time-based updates
+
+Display time or date information with smooth updates.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState, useEffect } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function Clock() {
+      const [time, setTime] = useState('');
+
+      useEffect(() => {
+        const updateTime = () => {
+          setTime(new Date().toLocaleTimeString());
+        };
+        updateTime();
+        const interval = setInterval(updateTime, 1000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return <TextMorph>{time}</TextMorph>;
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph :text="time" />
+    </template>
+
+    <script setup lang="ts">
+    import { ref, onMounted, onUnmounted } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const time = ref('');
+    let interval: ReturnType<typeof setInterval>;
+
+    const updateTime = () => {
+      time.value = new Date().toLocaleTimeString();
+    };
+
+    onMounted(() => {
+      updateTime();
+      interval = setInterval(updateTime, 1000);
+    });
+
+    onUnmounted(() => {
+      clearInterval(interval);
+    });
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { onMount, onDestroy } from 'svelte';
+      import { TextMorph } from 'torph/svelte';
+
+      let time = '';
+      let interval: ReturnType<typeof setInterval>;
+
+      const updateTime = () => {
+        time = new Date().toLocaleTimeString();
+      };
+
+      onMount(() => {
+        updateTime();
+        interval = setInterval(updateTime, 1000);
+      });
+
+      onDestroy(() => {
+        clearInterval(interval);
+      });
+    </script>
+
+    <TextMorph text={time} />
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  For rapidly changing content like seconds in a clock, consider increasing the `duration` to create smoother transitions.
+</Note>

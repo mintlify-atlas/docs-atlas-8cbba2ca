@@ -1,0 +1,442 @@
+---
+title: Accessibility
+description: How Torph respects user preferences and ensures accessible text animations
+---
+
+Torph is built with accessibility in mind, automatically respecting user motion preferences and providing options to ensure your animations are inclusive.
+
+## Respecting reduced motion preferences
+
+### Automatic detection
+
+Torph automatically detects the `prefers-reduced-motion` media query and disables animations when users have requested reduced motion:
+
+```typescript
+if (typeof window !== "undefined" && this.options.respectReducedMotion) {
+  this.mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  this.prefersReducedMotion = this.mediaQuery.matches;
+  this.mediaQuery.addEventListener("change", this.handleMediaQueryChange);
+}
+```
+
+**Implementation details** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:47-51`):
+
+- Checks for `prefers-reduced-motion: reduce` on initialization
+- Listens for changes to the media query
+- Immediately applies new preference without requiring component remount
+
+### How it works
+
+When reduced motion is detected, Torph switches to disabled mode:
+
+```typescript
+private isDisabled(): boolean {
+  return Boolean(
+    this.options.disabled ||
+      (this.options.respectReducedMotion && this.prefersReducedMotion)
+  );
+}
+
+if (this.isDisabled()) {
+  if (typeof value === "string") {
+    this.element.textContent = value;
+  }
+  return;
+}
+```
+
+**What happens** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:84-100`):
+
+- No FLIP calculations are performed
+- No DOM element creation for individual characters/words
+- Text updates instantly via `textContent`
+- No styles or animations are injected
+
+<Info>
+This ensures users with vestibular disorders, motion sensitivity, or those who simply prefer reduced motion have a smooth, instant text update experience.
+</Info>
+
+### Configuring reduced motion behavior
+
+The `respectReducedMotion` option is enabled by default:
+
+```typescript
+export const DEFAULT_TEXT_MORPH_OPTIONS = {
+  debug: false,
+  locale: "en",
+  duration: 400,
+  scale: true,
+  ease: "cubic-bezier(0.19, 1, 0.22, 1)",
+  disabled: false,
+  respectReducedMotion: true,
+} as const;
+```
+
+**From** `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:6-14`.
+
+You can override this behavior if needed:
+
+```tsx
+// Not recommended: forces animations even when user prefers reduced motion
+<TextMorph respectReducedMotion={false}>
+  {text}
+</TextMorph>
+```
+
+<Warning>
+Disabling `respectReducedMotion` can negatively impact users with motion sensitivity. Only disable it if you have a specific accessibility requirement that demands it.
+</Warning>
+
+### Runtime detection and updates
+
+Torph responds to changes in motion preferences without requiring a page reload:
+
+```typescript
+private handleMediaQueryChange = (event: MediaQueryListEvent) => {
+  this.prefersReducedMotion = event.matches;
+};
+```
+
+**Behavior** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:80-82`):
+
+- Listens for media query changes via `MediaQueryList.addEventListener`
+- Updates internal state immediately
+- Next text update will respect the new preference
+
+<Tip>
+Users can toggle reduced motion in their OS settings and see the change take effect immediately in your application.
+</Tip>
+
+### Testing reduced motion
+
+You can test the reduced motion behavior in several ways:
+
+<Accordion title="Browser DevTools">
+**Chrome/Edge:**
+1. Open DevTools (F12)
+2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+3. Type "reduced motion"
+4. Select "Emulate CSS prefers-reduced-motion"
+
+**Firefox:**
+1. Open DevTools (F12)
+2. Go to the Accessibility tab
+3. Check "Simulate" under "prefers-reduced-motion"
+
+**Safari:**
+1. Open Web Inspector
+2. Go to Elements tab
+3. Click the accessibility icon
+4. Select "prefers-reduced-motion: reduce"
+</Accordion>
+
+<Accordion title="Operating system settings">
+**macOS:**
+- System Preferences → Accessibility → Display → Reduce motion
+
+**Windows 10/11:**
+- Settings → Ease of Access → Display → Show animations in Windows
+
+**iOS:**
+- Settings → Accessibility → Motion → Reduce Motion
+
+**Android:**
+- Settings → Accessibility → Remove animations
+</Accordion>
+
+<Accordion title="Manual override for testing">
+```tsx
+const [forceReducedMotion, setForceReducedMotion] = useState(false);
+
+<TextMorph 
+  disabled={forceReducedMotion}
+  respectReducedMotion={true}
+>
+  {text}
+</TextMorph>
+
+<button onClick={() => setForceReducedMotion(!forceReducedMotion)}>
+  Toggle Reduced Motion
+</button>
+```
+</Accordion>
+
+## Screen reader considerations
+
+### Text content accessibility
+
+When animations are enabled, Torph creates individual `<span>` elements for each character or word:
+
+```typescript
+blocks.forEach((block) => {
+  const span = document.createElement("span");
+  span.setAttribute("torph-item", "");
+  span.setAttribute("torph-id", block.id);
+  span.textContent = block.string;
+  element.appendChild(span);
+});
+```
+
+**Screen reader behavior** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:196-202`):
+
+- Each span contains readable text content
+- Screen readers can access the full text string
+- No `aria-hidden` or visibility tricks that hide content
+- Text remains in logical reading order
+
+### Live region support
+
+For dynamic text that should be announced to screen readers, wrap TextMorph in a live region:
+
+```tsx
+<div role="status" aria-live="polite">
+  <TextMorph>{statusMessage}</TextMorph>
+</div>
+```
+
+**Live region options:**
+
+- `aria-live="polite"` - Announces changes when screen reader is idle
+- `aria-live="assertive"` - Interrupts to announce changes immediately
+- `role="status"` - Implies `aria-live="polite"` for status messages
+- `role="alert"` - Implies `aria-live="assertive"` for urgent messages
+
+<Note>
+When `respectReducedMotion` disables animations, text still updates instantly and will be announced to screen readers if wrapped in a live region.
+</Note>
+
+### Animation callbacks for screen readers
+
+Use animation callbacks to control screen reader announcements:
+
+```tsx
+const [isAnimating, setIsAnimating] = useState(false);
+
+const handleStart = () => setIsAnimating(true);
+const handleComplete = () => setIsAnimating(false);
+
+<div 
+  role="status" 
+  aria-live="polite"
+  aria-busy={isAnimating}
+>
+  <TextMorph
+    onAnimationStart={handleStart}
+    onAnimationComplete={handleComplete}
+  >
+    {text}
+  </TextMorph>
+</div>
+```
+
+The `aria-busy` attribute hints to screen readers that content is being updated.
+
+## Semantic HTML
+
+### Container element
+
+Torph uses a semantic container element that you control:
+
+```tsx
+// Default: div
+<TextMorph>{text}</TextMorph>
+
+// Custom semantic element
+<TextMorph as="span">{text}</TextMorph>
+<TextMorph as="h1">{text}</TextMorph>
+<TextMorph as="button">{text}</TextMorph>
+```
+
+<Tip>
+Use appropriate semantic HTML elements to maintain document structure and accessibility tree.
+</Tip>
+
+### Preserving headings and landmarks
+
+Animations don't interfere with semantic meaning:
+
+```tsx
+<h1>
+  <TextMorph>Page Title: {dynamicTitle}</TextMorph>
+</h1>
+```
+
+The heading level and role are preserved regardless of animation state.
+
+## Focus management
+
+### No focus trapping
+
+Torph doesn't interfere with focus order or keyboard navigation:
+
+```typescript
+child.style.pointerEvents = "none"; // Only on exiting characters
+```
+
+**Focus behavior** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:176`):
+
+- Individual character spans are not focusable
+- Only exiting elements get `pointer-events: none`
+- Container element maintains normal focus behavior
+- Tab order is unaffected
+
+### Interactive content
+
+If your text contains interactive elements, consider disabling animations:
+
+```tsx
+<TextMorph disabled={true}>
+  Click <a href="/introduction">here</a> to learn more
+</TextMorph>
+```
+
+Or extract the interactive parts:
+
+```tsx
+<span>
+  <TextMorph>{prefix}</TextMorph>
+  <a href="/introduction">here</a>
+  <TextMorph>{suffix}</TextMorph>
+</span>
+```
+
+## Cognitive accessibility
+
+### Avoid overuse
+
+Too many simultaneous animations can be overwhelming:
+
+```tsx
+// Avoid: Multiple animations competing for attention
+<div>
+  <TextMorph>{counter1}</TextMorph>
+  <TextMorph>{counter2}</TextMorph>
+  <TextMorph>{counter3}</TextMorph>
+  <TextMorph>{status}</TextMorph>
+</div>
+
+// Better: Prioritize what needs animation
+<div>
+  <TextMorph>{primaryMetric}</TextMorph>
+  <span>{secondaryMetric}</span>
+  <span>{tertiaryMetric}</span>
+</div>
+```
+
+### Appropriate duration
+
+Choose durations that allow users to perceive changes without being distracting:
+
+```tsx
+// Too fast - hard to perceive
+<TextMorph duration={100}>{text}</TextMorph>
+
+// Good - noticeable but not distracting  
+<TextMorph duration={300}>{text}</TextMorph>
+
+// Too slow - feels sluggish
+<TextMorph duration={1000}>{text}</TextMorph>
+```
+
+<Info>
+The default 400ms duration is based on research into optimal animation timings for text changes.
+</Info>
+
+### Context-appropriate usage
+
+Consider when animations are helpful vs. distracting:
+
+<Accordion title="Good use cases">
+- Dashboard metrics that update periodically
+- Counters showing progress or statistics
+- Status indicators that change state
+- Headings that switch between options
+- Loading states that transition to content
+</Accordion>
+
+<Accordion title="Avoid animating">
+- Critical error messages that need immediate attention
+- Form validation feedback that users are waiting for
+- Search results as users type (too frequent)
+- Long paragraphs of body text
+- Navigation labels or menu items
+</Accordion>
+
+## Cleanup and memory
+
+Torph properly cleans up accessibility-related resources:
+
+```typescript
+destroy() {
+  if (this.mediaQuery) {
+    this.mediaQuery.removeEventListener(
+      "change",
+      this.handleMediaQueryChange
+    );
+  }
+  this.element.getAnimations().forEach((anim) => anim.cancel());
+  // ...
+}
+```
+
+**Cleanup includes** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:67-78`):
+
+- Removing media query event listeners
+- Canceling active animations
+- Cleaning up DOM attributes
+- Removing injected styles
+
+This prevents memory leaks and ensures assistive technologies don't encounter stale information.
+
+## Accessibility checklist
+
+<Accordion title="Required">
+- ✅ Keep `respectReducedMotion={true}` (default)
+- ✅ Test with `prefers-reduced-motion` enabled
+- ✅ Ensure text is readable during and after animations
+- ✅ Use semantic HTML elements
+- ✅ Don't animate critical UI text
+</Accordion>
+
+<Accordion title="Recommended">
+- ✅ Wrap dynamic text in appropriate live regions
+- ✅ Use `aria-busy` during animations if needed
+- ✅ Choose appropriate animation durations (200-600ms)
+- ✅ Test with screen readers (NVDA, JAWS, VoiceOver)
+- ✅ Limit simultaneous animations on screen
+- ✅ Provide static alternatives for essential information
+</Accordion>
+
+<Accordion title="Testing">
+- ✅ Test with browser DevTools reduced motion emulation
+- ✅ Test with OS-level reduced motion settings
+- ✅ Test with screen readers
+- ✅ Test keyboard navigation
+- ✅ Test at different zoom levels
+- ✅ Test with high contrast modes
+</Accordion>
+
+## WCAG compliance
+
+When used properly, Torph helps meet WCAG 2.1 success criteria:
+
+- **2.2.2 Pause, Stop, Hide (Level A)**: Animations are brief (under 5 seconds) and don't auto-start on page load
+- **2.3.3 Animation from Interactions (Level AAA)**: Respects `prefers-reduced-motion` to disable motion animations
+- **1.4.13 Content on Hover or Focus (Level AA)**: Text remains visible and readable during animations
+
+<Warning>
+You are responsible for ensuring your specific implementation meets WCAG requirements for your use case. Always test with real users and assistive technologies.
+</Warning>
+
+## Summary
+
+Torph is designed to be accessible by default:
+
+- Automatically respects `prefers-reduced-motion` media query
+- Updates text instantly when reduced motion is preferred
+- Maintains semantic HTML and document structure
+- Compatible with screen readers and assistive technologies
+- Provides callbacks for custom accessibility enhancements
+- Properly cleans up resources and event listeners
+
+By keeping `respectReducedMotion` enabled and following accessibility best practices, your text animations will be inclusive and user-friendly.

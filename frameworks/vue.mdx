@@ -1,0 +1,261 @@
+---
+title: Vue
+description: Use Torph in Vue 3 applications with the TextMorph component
+---
+
+## Installation
+
+<Steps>
+  <Step title="Install Torph">
+    ```bash
+    npm install torph
+    ```
+  </Step>
+  
+  <Step title="Import the component">
+    ```vue
+    <script setup>
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Step>
+</Steps>
+
+## TextMorph component
+
+The `TextMorph` component is built with Vue 3's Composition API using `<script setup>`.
+
+### Basic usage
+
+```vue
+<script setup>
+import { ref } from 'vue';
+import { TextMorph } from 'torph/vue';
+
+const text = ref('Hello World');
+</script>
+
+<template>
+  <TextMorph 
+    :text="text" 
+    class="text-4xl font-bold"
+  />
+</template>
+```
+
+### Props
+
+<ParamField path="text" type="string" required>
+  The text content to display and animate.
+</ParamField>
+
+<ParamField path="class" type="string">
+  CSS class name to apply to the container element.
+</ParamField>
+
+<ParamField path="style" type="Record<string, string | number>">
+  Inline styles object to apply to the container element.
+</ParamField>
+
+<ParamField path="as" type="string" default="div">
+  The HTML element to render as the container.
+</ParamField>
+
+<ParamField path="locale" type="Intl.LocalesArgument" default="en">
+  Locale for text segmentation. Used by `Intl.Segmenter` to properly split text into graphemes or words.
+</ParamField>
+
+<ParamField path="duration" type="number" default={400}>
+  Animation duration in milliseconds.
+</ParamField>
+
+<ParamField path="ease" type="string" default="cubic-bezier(0.19, 1, 0.22, 1)">
+  CSS easing function for the animation.
+</ParamField>
+
+<ParamField path="scale" type="boolean" default={true}>
+  Whether to apply a subtle scale effect during animation.
+</ParamField>
+
+<ParamField path="debug" type="boolean" default={false}>
+  Enable debug mode to visualize element boundaries with colored outlines.
+</ParamField>
+
+<ParamField path="disabled" type="boolean" default={false}>
+  Disable animations and render text updates instantly.
+</ParamField>
+
+<ParamField path="respectReducedMotion" type="boolean" default={true}>
+  Respect the user's `prefers-reduced-motion` setting and disable animations when enabled.
+</ParamField>
+
+<ParamField path="onAnimationStart" type="() => void">
+  Callback function called when an animation starts.
+</ParamField>
+
+<ParamField path="onAnimationComplete" type="() => void">
+  Callback function called when an animation completes.
+</ParamField>
+
+### Examples
+
+<Tabs>
+  <Tab title="Custom element">
+    ```vue
+    <template>
+      <TextMorph 
+        :text="title" 
+        as="h1"
+        class="heading"
+      />
+    </template>
+    ```
+  </Tab>
+  
+  <Tab title="Custom animation">
+    ```vue
+    <template>
+      <TextMorph 
+        :text="text"
+        :duration="600"
+        ease="cubic-bezier(0.34, 1.56, 0.64, 1)"
+        :scale="false"
+      />
+    </template>
+    ```
+  </Tab>
+  
+  <Tab title="With callbacks">
+    ```vue
+    <script setup>
+    import { TextMorph } from 'torph/vue';
+
+    const handleStart = () => {
+      console.log('Animation started');
+    };
+
+    const handleComplete = () => {
+      console.log('Animation complete');
+    };
+    </script>
+
+    <template>
+      <TextMorph
+        :text="text"
+        :onAnimationStart="handleStart"
+        :onAnimationComplete="handleComplete"
+      />
+    </template>
+    ```
+  </Tab>
+  
+  <Tab title="Inline styles">
+    ```vue
+    <template>
+      <TextMorph 
+        :text="text"
+        :style="{ color: 'blue', fontSize: '24px' }"
+      />
+    </template>
+    ```
+  </Tab>
+</Tabs>
+
+## Reactive updates
+
+The component automatically watches the `text` prop and triggers animations when it changes.
+
+```vue
+<script setup>
+import { ref } from 'vue';
+import { TextMorph } from 'torph/vue';
+
+const count = ref(0);
+const text = computed(() => `Count: ${count.value}`);
+
+setInterval(() => {
+  count.value++;
+}, 1000);
+</script>
+
+<template>
+  <TextMorph :text="text" />
+</template>
+```
+
+<Note>
+  The component uses Vue's `watch` API to listen for text changes. The animation triggers automatically whenever the `text` prop updates.
+</Note>
+
+## Lifecycle
+
+The component handles initialization and cleanup automatically:
+
+- **onMounted**: Creates the TextMorph instance and performs the initial render
+- **onUnmounted**: Destroys the instance and cleans up animations
+
+```vue
+<script setup>
+import { onMounted, onUnmounted } from 'vue';
+import { TextMorph } from 'torph/vue';
+
+// The component handles these internally:
+// onMounted(() => {
+//   // TextMorph instance is created
+//   // Initial text is rendered
+// });
+
+// onUnmounted(() => {
+//   // TextMorph instance is destroyed
+//   // Animations are cleaned up
+// });
+</script>
+```
+
+## TypeScript
+
+Torph provides full TypeScript support for Vue applications.
+
+### Type definitions
+
+```vue
+<script setup lang="ts">
+import { TextMorph } from 'torph/vue';
+import type { TextMorphProps } from 'torph/vue';
+import { ref } from 'vue';
+
+const text = ref<string>('Hello');
+
+// Use the prop types for custom components
+type Props = TextMorphProps;
+</script>
+```
+
+### Interface
+
+```ts
+interface TextMorphProps extends Omit<TextMorphOptions, 'element'> {
+  text: string;
+  class?: string;
+  style?: Record<string, string | number>;
+  as?: string;
+}
+```
+
+## Nuxt
+
+The Vue component works seamlessly with Nuxt 3.
+
+```vue
+<script setup>
+const text = ref('Welcome to Nuxt');
+</script>
+
+<template>
+  <TextMorph :text="text" class="hero-text" />
+</template>
+```
+
+<Tip>
+  The component only runs animations on the client side. It automatically handles SSR scenarios by rendering the initial text without animation during server-side rendering.
+</Tip>

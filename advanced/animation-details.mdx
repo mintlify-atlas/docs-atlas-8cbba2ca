@@ -1,0 +1,245 @@
+---
+title: Animation details
+description: Understanding how Torph uses the FLIP technique for smooth text morphing animations
+---
+
+Torph uses the **FLIP animation technique** to create smooth, performant text morphing animations. This page explains how the animation system works under the hood.
+
+## What is FLIP?
+
+FLIP stands for **First, Last, Invert, Play**. It's a technique for creating performant animations by:
+
+1. **First**: Measure the initial position of elements
+2. **Last**: Apply changes and measure the final position
+3. **Invert**: Calculate the difference and apply a transform to make elements appear in their original position
+4. **Play**: Animate the transform back to 0, creating smooth motion
+
+<Info>
+FLIP animations are highly performant because they use CSS transforms instead of layout-shifting properties like `top` or `left`.
+</Info>
+
+## The animation lifecycle
+
+### 1. Text segmentation
+
+When you update text, Torph first segments it into individual blocks (characters or words):
+
+```typescript
+const segmenter = new Intl.Segmenter(locale, {
+  granularity: byWord ? "word" : "grapheme",
+});
+const iterator = segmenter.segment(value)[Symbol.iterator]();
+const blocks = this.blocks(iterator);
+```
+
+**Key implementation details** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:117-129`):
+
+- Uses `Intl.Segmenter` API for proper grapheme/word segmentation
+- Automatically detects word mode when text contains spaces
+- Falls back to simple splitting for browsers without `Intl.Segmenter`
+- Each block gets a unique ID for tracking across animations
+
+### 2. Measuring positions
+
+The `measure()` method captures the current position of all text blocks:
+
+```typescript
+private measure() {
+  const children = Array.from(this.element.children) as HTMLElement[];
+  const measures: Measures = {};
+
+  children.forEach((child, index) => {
+    if (child.hasAttribute("torph-exiting")) return;
+    const key = child.getAttribute("torph-id") || `child-${index}`;
+    measures[key] = {
+      x: child.offsetLeft,
+      y: child.offsetTop,
+    };
+  });
+
+  return measures;
+}
+```
+
+**What gets measured** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:290-304`):
+
+- `offsetLeft` and `offsetTop` for each character/word span
+- Positions are stored in a key-value map using the block's unique ID
+- Exiting elements are skipped during measurement
+
+### 3. Block creation and DOM updates
+
+After segmentation, Torph creates `<span>` elements for each block:
+
+```typescript
+blocks.forEach((block) => {
+  const span = document.createElement("span");
+  span.setAttribute("torph-item", "");
+  span.setAttribute("torph-id", block.id);
+  span.textContent = block.string;
+  element.appendChild(span);
+});
+```
+
+**Block structure** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:16-19`):
+
+```typescript
+type Block = {
+  id: string;      // Unique identifier for tracking
+  string: string;  // The actual character or word
+};
+```
+
+### 4. FLIP calculation and animation
+
+Once new blocks are in the DOM, Torph calculates the delta and animates:
+
+```typescript
+const prev = this.prevMeasures[key];
+const current = this.currentMeasures[key];
+
+let deltaX = prev ? prev.x - cx : 0;
+let deltaY = prev ? prev.y - cy : 0;
+
+child.animate(
+  {
+    transform: `translate(${deltaX}px, ${deltaY}px)`,
+    offset: 0,
+  },
+  {
+    duration: this.options.duration,
+    easing: this.options.ease,
+    fill: "both",
+  }
+);
+```
+
+**Animation details** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:358-368`):
+
+- Calculates `deltaX` and `deltaY` by comparing previous and current positions
+- Applies inverse transform to start from the old position
+- Uses Web Animations API for smooth, hardware-accelerated motion
+- Default duration is 400ms with a custom cubic-bezier easing
+
+<Tip>
+The `fill: "both"` option ensures transforms apply both before and after the animation, preventing visual glitches.
+</Tip>
+
+## Handling new and exiting characters
+
+### New characters
+
+When a character appears for the first time, it inherits the motion of its nearest persistent neighbor:
+
+```typescript
+if (isNew) {
+  const blockIndex = blocks.findIndex((b) => b.id === key);
+  let anchorId: string | null = null;
+
+  // Find nearest persistent neighbor
+  for (let j = blockIndex - 1; j >= 0; j--) {
+    if (persistentIds.has(blocks[j]!.id)) {
+      anchorId = blocks[j]!.id;
+      break;
+    }
+  }
+
+  if (anchorId) {
+    const anchorPrev = this.prevMeasures[anchorId];
+    const anchorCurr = this.currentMeasures[anchorId];
+    deltaX = anchorPrev.x - anchorCurr.x;
+    deltaY = anchorPrev.y - anchorCurr.y;
+  }
+}
+```
+
+**Key behavior** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:329-355`):
+
+- New characters fade in with `opacity: 0 → 1` animation
+- They move together with nearby persistent characters
+- Fade-in duration is 25% of the main animation duration
+- Optional scale effect (`scale(0.95)`) when `scale` option is enabled
+
+### Exiting characters
+
+Characters that are removed are positioned absolutely and animated out:
+
+```typescript
+exiting.forEach((child) => {
+  const rect = child.getBoundingClientRect();
+  child.setAttribute("torph-exiting", "");
+  child.style.position = "absolute";
+  child.style.pointerEvents = "none";
+  child.style.left = `${rect.left - parentRect.left}px`;
+  child.style.top = `${rect.top - parentRect.top}px`;
+});
+```
+
+**Exit animation** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:172-255`):
+
+- Positioned absolutely to prevent layout shift
+- Moves with nearest persistent neighbor for cohesive motion
+- Fades out over 25% of the animation duration
+- Removed from DOM when animation completes
+
+<Note>
+Exiting characters are given `pointer-events: none` to prevent interaction during their exit animation.
+</Note>
+
+## Container size animation
+
+Torph also animates the container's dimensions to accommodate text changes:
+
+```typescript
+const oldWidth = element.offsetWidth;
+const oldHeight = element.offsetHeight;
+
+// ... update content ...
+
+element.style.width = "auto";
+element.style.height = "auto";
+void element.offsetWidth; // force reflow
+
+const newWidth = element.offsetWidth;
+const newHeight = element.offsetHeight;
+
+element.style.width = `${oldWidth}px`;
+element.style.height = `${oldHeight}px`;
+void element.offsetWidth; // force reflow
+
+element.style.width = `${newWidth}px`;
+element.style.height = `${newHeight}px`;
+```
+
+**Size transition** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:264-278`):
+
+- Measures old dimensions before content change
+- Temporarily sets dimensions to `auto` to measure new size
+- Forces reflow to reset to old dimensions
+- Transitions to new dimensions using CSS transitions
+
+<Warning>
+Forced reflows (`void element.offsetWidth`) are necessary for the animation but can impact performance if done excessively.
+</Warning>
+
+## Animation cancellation
+
+Before starting new animations, Torph cancels any in-progress animations:
+
+```typescript
+child.getAnimations().forEach((a) => a.cancel());
+```
+
+This prevents animation conflicts when text updates rapidly.
+
+## Summary
+
+Torph's animation system is built on these core principles:
+
+1. **FLIP technique** for performant, transform-based animations
+2. **Intelligent block tracking** using unique IDs for each character/word
+3. **Position measurement** before and after content changes
+4. **Coordinated motion** where new/exiting characters follow persistent neighbors
+5. **Hardware acceleration** via CSS transforms and Web Animations API
+
+The result is a smooth, 60fps text morphing animation that works reliably across different text lengths and content types.

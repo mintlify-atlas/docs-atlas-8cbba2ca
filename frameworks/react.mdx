@@ -1,0 +1,239 @@
+---
+title: React
+description: Use Torph in React applications with the TextMorph component and useTextMorph hook
+---
+
+## Installation
+
+<Steps>
+  <Step title="Install Torph">
+    ```bash
+    npm install torph
+    ```
+  </Step>
+  
+  <Step title="Import the component">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+    ```
+  </Step>
+</Steps>
+
+## TextMorph component
+
+The `TextMorph` component is the primary way to use Torph in React applications.
+
+### Basic usage
+
+```tsx
+import { TextMorph } from 'torph/react';
+
+function App() {
+  const [text, setText] = useState('Hello');
+
+  return (
+    <TextMorph className="text-4xl font-bold">
+      {text}
+    </TextMorph>
+  );
+}
+```
+
+### Props
+
+<ParamField path="children" type="string" required>
+  The text content to display and animate.
+</ParamField>
+
+<ParamField path="className" type="string">
+  CSS class name to apply to the container element.
+</ParamField>
+
+<ParamField path="style" type="React.CSSProperties">
+  Inline styles to apply to the container element.
+</ParamField>
+
+<ParamField path="as" type="keyof JSX.IntrinsicElements" default="div">
+  The HTML element to render as the container.
+</ParamField>
+
+<ParamField path="locale" type="Intl.LocalesArgument" default="en">
+  Locale for text segmentation. Used by `Intl.Segmenter` to properly split text into graphemes or words.
+</ParamField>
+
+<ParamField path="duration" type="number" default={400}>
+  Animation duration in milliseconds.
+</ParamField>
+
+<ParamField path="ease" type="string" default="cubic-bezier(0.19, 1, 0.22, 1)">
+  CSS easing function for the animation.
+</ParamField>
+
+<ParamField path="scale" type="boolean" default={true}>
+  Whether to apply a subtle scale effect during animation.
+</ParamField>
+
+<ParamField path="debug" type="boolean" default={false}>
+  Enable debug mode to visualize element boundaries with colored outlines.
+</ParamField>
+
+<ParamField path="disabled" type="boolean" default={false}>
+  Disable animations and render text updates instantly.
+</ParamField>
+
+<ParamField path="respectReducedMotion" type="boolean" default={true}>
+  Respect the user's `prefers-reduced-motion` setting and disable animations when enabled.
+</ParamField>
+
+<ParamField path="onAnimationStart" type="() => void">
+  Callback function called when an animation starts.
+</ParamField>
+
+<ParamField path="onAnimationComplete" type="() => void">
+  Callback function called when an animation completes.
+</ParamField>
+
+### Examples
+
+<Tabs>
+  <Tab title="Custom element">
+    ```tsx
+    <TextMorph as="h1" className="heading">
+      {title}
+    </TextMorph>
+    ```
+  </Tab>
+  
+  <Tab title="Custom animation">
+    ```tsx
+    <TextMorph 
+      duration={600}
+      ease="cubic-bezier(0.34, 1.56, 0.64, 1)"
+      scale={false}
+    >
+      {text}
+    </TextMorph>
+    ```
+  </Tab>
+  
+  <Tab title="With callbacks">
+    ```tsx
+    <TextMorph
+      onAnimationStart={() => console.log('Animation started')}
+      onAnimationComplete={() => console.log('Animation complete')}
+    >
+      {text}
+    </TextMorph>
+    ```
+  </Tab>
+  
+  <Tab title="Debug mode">
+    ```tsx
+    <TextMorph debug>
+      {text}
+    </TextMorph>
+    ```
+  </Tab>
+</Tabs>
+
+## useTextMorph hook
+
+For more control over the animation lifecycle, use the `useTextMorph` hook to build your own custom implementation.
+
+### Basic usage
+
+```tsx
+import { useTextMorph } from 'torph/react';
+
+function CustomTextMorph({ text }: { text: string }) {
+  const { ref, update } = useTextMorph({
+    duration: 400,
+    ease: 'cubic-bezier(0.19, 1, 0.22, 1)',
+  });
+
+  useEffect(() => {
+    update(text);
+  }, [text, update]);
+
+  return <div ref={ref} className="my-custom-class" />;
+}
+```
+
+### API
+
+<ParamField path="options" type="Omit<TextMorphOptions, 'element'>" required>
+  Configuration options for the text morph instance. Accepts all options except `element`.
+</ParamField>
+
+#### Returns
+
+<ResponseField name="ref" type="React.RefObject<HTMLDivElement>">
+  React ref to attach to your container element.
+</ResponseField>
+
+<ResponseField name="update" type="(text: string) => void">
+  Function to update the text content and trigger the morph animation.
+</ResponseField>
+
+### Advanced example
+
+```tsx
+import { useTextMorph } from 'torph/react';
+import { useEffect, useCallback } from 'react';
+
+function AdvancedTextMorph({ text, onComplete }: Props) {
+  const { ref, update } = useTextMorph({
+    duration: 500,
+    locale: 'en-US',
+    respectReducedMotion: true,
+    onAnimationStart: () => {
+      console.log('Starting animation');
+    },
+    onAnimationComplete: () => {
+      console.log('Animation complete');
+      onComplete?.();
+    },
+  });
+
+  useEffect(() => {
+    update(text);
+  }, [text, update]);
+
+  return (
+    <h2 
+      ref={ref} 
+      className="text-3xl font-bold"
+      style={{ color: 'blue' }}
+    />
+  );
+}
+```
+
+<Note>
+  The `useTextMorph` hook automatically handles cleanup when the component unmounts by calling `destroy()` on the TextMorph instance.
+</Note>
+
+## TypeScript
+
+Torph is written in TypeScript and provides full type definitions out of the box.
+
+### Type definitions
+
+```tsx
+import type { TextMorphProps } from 'torph/react';
+import type { TextMorphOptions } from 'torph';
+
+// Component props
+type Props = TextMorphProps;
+
+// Hook options
+type HookOptions = Omit<TextMorphOptions, 'element'>;
+```
+
+## Server-side rendering
+
+The `TextMorph` component uses the `"use client"` directive and is compatible with React Server Components. It will only run animations on the client side.
+
+<Tip>
+  For Next.js applications, the component works seamlessly with both the App Router and Pages Router.
+</Tip>

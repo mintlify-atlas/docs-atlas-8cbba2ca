@@ -1,0 +1,321 @@
+---
+title: Vanilla JavaScript
+description: Use Torph in vanilla JavaScript/TypeScript projects with the TextMorph class
+---
+
+## Installation
+
+<Steps>
+  <Step title="Install Torph">
+    ```bash
+    npm install torph
+    ```
+  </Step>
+  
+  <Step title="Import the class">
+    ```javascript
+    import { TextMorph } from 'torph';
+    ```
+  </Step>
+</Steps>
+
+## TextMorph class
+
+The `TextMorph` class provides the core API for creating animated text morphing effects in any JavaScript environment.
+
+### Basic usage
+
+```javascript
+import { TextMorph } from 'torph';
+
+const element = document.querySelector('#text-container');
+const morph = new TextMorph({ element });
+
+// Update the text (triggers animation)
+morph.update('Hello World');
+
+// Update again to see the morph effect
+morph.update('Hello Torph');
+
+// Clean up when done
+morph.destroy();
+```
+
+### Constructor options
+
+The `TextMorph` constructor accepts a single `options` object.
+
+<ParamField path="element" type="HTMLElement" required>
+  The DOM element that will contain and display the morphing text.
+</ParamField>
+
+<ParamField path="locale" type="Intl.LocalesArgument" default="en">
+  Locale for text segmentation. Used by `Intl.Segmenter` to properly split text into graphemes or words.
+</ParamField>
+
+<ParamField path="duration" type="number" default={400}>
+  Animation duration in milliseconds.
+</ParamField>
+
+<ParamField path="ease" type="string" default="cubic-bezier(0.19, 1, 0.22, 1)">
+  CSS easing function for the animation. Any valid CSS cubic-bezier value.
+</ParamField>
+
+<ParamField path="scale" type="boolean" default={true}>
+  Whether to apply a subtle scale effect during animation (0.95 scale for entering/exiting characters).
+</ParamField>
+
+<ParamField path="debug" type="boolean" default={false}>
+  Enable debug mode to visualize element boundaries with colored outlines (magenta for root, cyan for items).
+</ParamField>
+
+<ParamField path="disabled" type="boolean" default={false}>
+  Disable animations and render text updates instantly.
+</ParamField>
+
+<ParamField path="respectReducedMotion" type="boolean" default={true}>
+  Respect the user's `prefers-reduced-motion` setting and disable animations when enabled.
+</ParamField>
+
+<ParamField path="onAnimationStart" type="() => void">
+  Callback function called when an animation starts.
+</ParamField>
+
+<ParamField path="onAnimationComplete" type="() => void">
+  Callback function called when an animation completes.
+</ParamField>
+
+## Methods
+
+### update()
+
+Updates the text content and triggers the morph animation.
+
+```javascript
+morph.update(text);
+```
+
+**Parameters:**
+- `text` (string | HTMLElement): The new text to display
+
+<Note>
+  HTMLElement support is planned but not yet implemented. Currently only string values are supported.
+</Note>
+
+**Behavior:**
+- If the text hasn't changed, no animation occurs
+- If animations are disabled (via `disabled` option or reduced motion preference), the text updates instantly
+- On first call, renders text without animation
+- On subsequent calls, animates the transition using FLIP technique
+
+### destroy()
+
+Cleans up the TextMorph instance and removes all event listeners and styles.
+
+```javascript
+morph.destroy();
+```
+
+**Behavior:**
+- Removes media query event listeners
+- Cancels all running animations
+- Removes custom attributes from the element
+- Removes injected styles from the document
+
+<Tip>
+  Always call `destroy()` when you're done with a TextMorph instance to prevent memory leaks and clean up resources.
+</Tip>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic counter">
+    ```javascript
+    import { TextMorph } from 'torph';
+
+    const element = document.querySelector('#counter');
+    const morph = new TextMorph({ element });
+
+    let count = 0;
+    setInterval(() => {
+      count++;
+      morph.update(`Count: ${count}`);
+    }, 1000);
+    ```
+  </Tab>
+  
+  <Tab title="Custom animation">
+    ```javascript
+    const morph = new TextMorph({
+      element: document.querySelector('#text'),
+      duration: 600,
+      ease: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      scale: false,
+    });
+
+    morph.update('Custom animation');
+    ```
+  </Tab>
+  
+  <Tab title="With callbacks">
+    ```javascript
+    const morph = new TextMorph({
+      element: document.querySelector('#text'),
+      onAnimationStart: () => {
+        console.log('Animation started');
+      },
+      onAnimationComplete: () => {
+        console.log('Animation complete');
+      },
+    });
+
+    morph.update('Watch the console!');
+    ```
+  </Tab>
+  
+  <Tab title="Debug mode">
+    ```javascript
+    const morph = new TextMorph({
+      element: document.querySelector('#text'),
+      debug: true, // Shows magenta outline on root, cyan on items
+    });
+
+    morph.update('Debug visualization');
+    ```
+  </Tab>
+  
+  <Tab title="Multiple languages">
+    ```javascript
+    const morph = new TextMorph({
+      element: document.querySelector('#text'),
+      locale: 'ja-JP', // Japanese locale for proper segmentation
+    });
+
+    morph.update('こんにちは世界');
+    ```
+  </Tab>
+</Tabs>
+
+## How it works
+
+The TextMorph class uses the FLIP animation technique:
+
+1. **First**: Measures the current position of all text segments
+2. **Last**: Updates the DOM with new text and measures new positions
+3. **Invert**: Calculates the difference between old and new positions
+4. **Play**: Animates from the inverted position back to the new position
+
+### Text segmentation
+
+Torph uses the `Intl.Segmenter` API to intelligently split text:
+
+- **By grapheme**: For single words or text without spaces (e.g., "Hello")
+- **By word**: For text containing spaces (e.g., "Hello World")
+
+This ensures proper handling of:
+- Emoji sequences (👨‍👩‍👧‍👦 is treated as one unit)
+- Accented characters (é, ñ, etc.)
+- Complex scripts (Arabic, Thai, etc.)
+
+<Note>
+  For browsers without `Intl.Segmenter` support, Torph falls back to simple string splitting.
+</Note>
+
+## Styling
+
+The TextMorph class automatically injects required CSS styles into the document.
+
+### Generated styles
+
+```css
+[torph-root] {
+  display: inline-flex;
+  position: relative;
+  will-change: width, height;
+  transition-property: width, height;
+  white-space: nowrap;
+}
+
+[torph-item] {
+  display: inline-block;
+  will-change: opacity, transform;
+  transform: none;
+  opacity: 1;
+}
+
+[torph-root][torph-debug] {
+  outline: 2px solid magenta;
+}
+
+[torph-root][torph-debug] [torph-item] {
+  outline: 2px solid cyan;
+  outline-offset: -4px;
+}
+```
+
+### Custom styling
+
+You can style the container element normally:
+
+```css
+#text-container {
+  font-size: 48px;
+  font-weight: bold;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+}
+```
+
+## TypeScript
+
+Torph is written in TypeScript and provides full type definitions.
+
+### Type imports
+
+```typescript
+import { TextMorph } from 'torph';
+import type { TextMorphOptions } from 'torph';
+
+const options: TextMorphOptions = {
+  element: document.querySelector('#text')!,
+  duration: 400,
+  ease: 'cubic-bezier(0.19, 1, 0.22, 1)',
+  onAnimationComplete: () => {
+    console.log('Done!');
+  },
+};
+
+const morph = new TextMorph(options);
+```
+
+### Interface
+
+```typescript
+interface TextMorphOptions {
+  element: HTMLElement;
+  locale?: Intl.LocalesArgument;
+  duration?: number;
+  ease?: string;
+  scale?: boolean;
+  debug?: boolean;
+  disabled?: boolean;
+  respectReducedMotion?: boolean;
+  onAnimationStart?: () => void;
+  onAnimationComplete?: () => void;
+}
+```
+
+## Browser support
+
+Torph works in all modern browsers that support:
+- Web Animations API
+- CSS transforms and transitions
+- ES2015+ JavaScript
+
+**Optional features:**
+- `Intl.Segmenter` (graceful fallback for older browsers)
+- `prefers-reduced-motion` media query (graceful degradation)
+
+<Tip>
+  For production use, consider including polyfills for older browsers if needed.
+</Tip>

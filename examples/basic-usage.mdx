@@ -1,0 +1,310 @@
+---
+title: Basic usage
+description: Simple examples to get started with Torph text morphing animations
+---
+
+## Simple text morph
+
+The most basic usage of Torph is to pass text as children (React) or as a `text` prop (Vue/Svelte). The component will automatically animate when the text changes.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <div>
+          <TextMorph>Hello World</TextMorph>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <TextMorph text="Hello World" />
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <div>
+      <TextMorph text="Hello World" />
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+## Custom element type
+
+By default, Torph renders as a `div`. You can customize the element type using the `as` prop.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph as="h1">Animate Text Easily</TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Animate Text Easily" as="h1" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Animate Text Easily" as="h1" />
+    ```
+  </Tab>
+</Tabs>
+
+## Animation duration
+
+Control the animation speed with the `duration` prop (in milliseconds). The default is 400ms.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph duration={800}>
+          Slow Animation
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="Slow Animation" :duration="800" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="Slow Animation" duration={800} />
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  The `duration` applies to both the character movement and the container width/height transitions.
+</Note>
+
+## Custom easing
+
+Customize the animation timing with a CSS cubic-bezier easing function. The default is `cubic-bezier(0.19, 1, 0.22, 1)`.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph ease="cubic-bezier(0.4, 0, 0.2, 1)">
+          Custom Easing
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        text="Custom Easing" 
+        ease="cubic-bezier(0.4, 0, 0.2, 1)" 
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph 
+      text="Custom Easing" 
+      ease="cubic-bezier(0.4, 0, 0.2, 1)" 
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Locale support
+
+Torph uses `Intl.Segmenter` for proper text segmentation. Set the `locale` prop to match your content language for correct character boundary detection.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph locale="ja">
+          こんにちは世界
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="こんにちは世界" locale="ja" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="こんにちは世界" locale="ja" />
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  The default locale is `"en"`. For multilingual apps, pass the user's language preference to ensure proper text segmentation.
+</Tip>
+
+## Disable animations
+
+You can disable animations entirely with the `disabled` prop. Text will update instantly without any morphing effect.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph disabled>
+          No Animation
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph text="No Animation" :disabled="true" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph text="No Animation" disabled={true} />
+    ```
+  </Tab>
+</Tabs>
+
+## Respect reduced motion
+
+Torph respects the user's `prefers-reduced-motion` system preference by default. When enabled, animations are disabled automatically for users who prefer reduced motion.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      return (
+        <TextMorph respectReducedMotion>
+          Accessible Animation
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        text="Accessible Animation" 
+        :respectReducedMotion="true" 
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from 'torph/vue';
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+    </script>
+
+    <TextMorph 
+      text="Accessible Animation" 
+      respectReducedMotion={true} 
+    />
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  This feature is enabled by default (`respectReducedMotion={true}`). Set it to `false` to always animate regardless of user preferences.
+</Note>

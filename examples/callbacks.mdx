@@ -1,0 +1,582 @@
+---
+title: Callbacks
+description: Use animation lifecycle callbacks to coordinate with other animations and logic
+---
+
+## Animation start callback
+
+The `onAnimationStart` callback fires when a text morph animation begins. It does not fire on the initial render.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      const [text, setText] = useState('Initial Text');
+
+      const handleAnimationStart = () => {
+        console.log('Animation started!');
+      };
+
+      return (
+        <div>
+          <TextMorph onAnimationStart={handleAnimationStart}>
+            {text}
+          </TextMorph>
+          <button onClick={() => setText('New Text')}>
+            Update Text
+          </button>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <TextMorph 
+          :text="text" 
+          :onAnimationStart="handleAnimationStart"
+        />
+        <button @click="text = 'New Text'">Update Text</button>
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const text = ref('Initial Text');
+
+    const handleAnimationStart = () => {
+      console.log('Animation started!');
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let text = 'Initial Text';
+
+      const handleAnimationStart = () => {
+        console.log('Animation started!');
+      };
+    </script>
+
+    <div>
+      <TextMorph 
+        {text} 
+        onAnimationStart={handleAnimationStart}
+      />
+      <button on:click={() => text = 'New Text'}>
+        Update Text
+      </button>
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  The `onAnimationStart` callback only fires when text changes after the initial render. It will not fire when the component first mounts.
+</Note>
+
+## Animation complete callback
+
+The `onAnimationComplete` callback fires when a text morph animation finishes.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      const [text, setText] = useState('Initial Text');
+      const [status, setStatus] = useState('idle');
+
+      const handleAnimationComplete = () => {
+        console.log('Animation completed!');
+        setStatus('completed');
+      };
+
+      return (
+        <div>
+          <TextMorph onAnimationComplete={handleAnimationComplete}>
+            {text}
+          </TextMorph>
+          <p>Status: {status}</p>
+          <button onClick={() => {
+            setText('New Text');
+            setStatus('animating');
+          }}>
+            Update Text
+          </button>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div>
+        <TextMorph 
+          :text="text" 
+          :onAnimationComplete="handleAnimationComplete"
+        />
+        <p>Status: {{ status }}</p>
+        <button @click="updateText">Update Text</button>
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const text = ref('Initial Text');
+    const status = ref('idle');
+
+    const handleAnimationComplete = () => {
+      console.log('Animation completed!');
+      status.value = 'completed';
+    };
+
+    const updateText = () => {
+      text.value = 'New Text';
+      status.value = 'animating';
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let text = 'Initial Text';
+      let status = 'idle';
+
+      const handleAnimationComplete = () => {
+        console.log('Animation completed!');
+        status = 'completed';
+      };
+
+      const updateText = () => {
+        text = 'New Text';
+        status = 'animating';
+      };
+    </script>
+
+    <div>
+      <TextMorph 
+        {text} 
+        onAnimationComplete={handleAnimationComplete}
+      />
+      <p>Status: {status}</p>
+      <button on:click={updateText}>Update Text</button>
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+## Chaining animations
+
+Use callbacks to coordinate multiple text morphs in sequence.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    const messages = ['Loading...', 'Processing...', 'Complete!'];
+
+    export default function App() {
+      const [index, setIndex] = useState(0);
+
+      const handleComplete = () => {
+        if (index < messages.length - 1) {
+          setTimeout(() => setIndex(index + 1), 500);
+        }
+      };
+
+      return (
+        <TextMorph onAnimationComplete={handleComplete}>
+          {messages[index]}
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph 
+        :text="messages[index]" 
+        :onAnimationComplete="handleComplete"
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const messages = ['Loading...', 'Processing...', 'Complete!'];
+    const index = ref(0);
+
+    const handleComplete = () => {
+      if (index.value < messages.length - 1) {
+        setTimeout(() => index.value++, 500);
+      }
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      const messages = ['Loading...', 'Processing...', 'Complete!'];
+      let index = 0;
+
+      const handleComplete = () => {
+        if (index < messages.length - 1) {
+          setTimeout(() => index++, 500);
+        }
+      };
+    </script>
+
+    <TextMorph 
+      text={messages[index]} 
+      onAnimationComplete={handleComplete}
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Analytics tracking
+
+Track when animations occur for analytics or monitoring.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function App() {
+      const [text, setText] = useState('Welcome');
+
+      const trackAnimationStart = () => {
+        // Send analytics event
+        window.analytics?.track('Text Morph Started', {
+          text: text,
+          timestamp: Date.now(),
+        });
+      };
+
+      const trackAnimationComplete = () => {
+        // Send analytics event
+        window.analytics?.track('Text Morph Completed', {
+          text: text,
+          timestamp: Date.now(),
+        });
+      };
+
+      return (
+        <TextMorph
+          onAnimationStart={trackAnimationStart}
+          onAnimationComplete={trackAnimationComplete}
+        >
+          {text}
+        </TextMorph>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <TextMorph
+        :text="text"
+        :onAnimationStart="trackAnimationStart"
+        :onAnimationComplete="trackAnimationComplete"
+      />
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const text = ref('Welcome');
+
+    const trackAnimationStart = () => {
+      // Send analytics event
+      window.analytics?.track('Text Morph Started', {
+        text: text.value,
+        timestamp: Date.now(),
+      });
+    };
+
+    const trackAnimationComplete = () => {
+      // Send analytics event
+      window.analytics?.track('Text Morph Completed', {
+        text: text.value,
+        timestamp: Date.now(),
+      });
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let text = 'Welcome';
+
+      const trackAnimationStart = () => {
+        // Send analytics event
+        window.analytics?.track('Text Morph Started', {
+          text: text,
+          timestamp: Date.now(),
+        });
+      };
+
+      const trackAnimationComplete = () => {
+        // Send analytics event
+        window.analytics?.track('Text Morph Completed', {
+          text: text,
+          timestamp: Date.now(),
+        });
+      };
+    </script>
+
+    <TextMorph
+      {text}
+      onAnimationStart={trackAnimationStart}
+      onAnimationComplete={trackAnimationComplete}
+    />
+    ```
+  </Tab>
+</Tabs>
+
+## Loading state management
+
+Coordinate loading states with animation lifecycle.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function SubmitButton() {
+      const [isLoading, setIsLoading] = useState(false);
+      const [text, setText] = useState('Submit');
+
+      const handleSubmit = async () => {
+        setIsLoading(true);
+        setText('Submitting...');
+
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setText('Success!');
+      };
+
+      const handleAnimationComplete = () => {
+        if (text === 'Success!') {
+          setTimeout(() => {
+            setText('Submit');
+            setIsLoading(false);
+          }, 1000);
+        }
+      };
+
+      return (
+        <button 
+          onClick={handleSubmit} 
+          disabled={isLoading}
+        >
+          <TextMorph onAnimationComplete={handleAnimationComplete}>
+            {text}
+          </TextMorph>
+        </button>
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <button 
+        @click="handleSubmit" 
+        :disabled="isLoading"
+      >
+        <TextMorph 
+          :text="text" 
+          :onAnimationComplete="handleAnimationComplete"
+        />
+      </button>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const isLoading = ref(false);
+    const text = ref('Submit');
+
+    const handleSubmit = async () => {
+      isLoading.value = true;
+      text.value = 'Submitting...';
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      text.value = 'Success!';
+    };
+
+    const handleAnimationComplete = () => {
+      if (text.value === 'Success!') {
+        setTimeout(() => {
+          text.value = 'Submit';
+          isLoading.value = false;
+        }, 1000);
+      }
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let isLoading = false;
+      let text = 'Submit';
+
+      const handleSubmit = async () => {
+        isLoading = true;
+        text = 'Submitting...';
+
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        text = 'Success!';
+      };
+
+      const handleAnimationComplete = () => {
+        if (text === 'Success!') {
+          setTimeout(() => {
+            text = 'Submit';
+            isLoading = false;
+          }, 1000);
+        }
+      };
+    </script>
+
+    <button 
+      on:click={handleSubmit} 
+      disabled={isLoading}
+    >
+      <TextMorph 
+        {text} 
+        onAnimationComplete={handleAnimationComplete}
+      />
+    </button>
+    ```
+  </Tab>
+</Tabs>
+
+## Triggering side effects
+
+Use callbacks to trigger other UI changes or effects.
+
+<Tabs>
+  <Tab title="React">
+    ```tsx
+    import { useState } from 'react';
+    import { TextMorph } from 'torph/react';
+
+    export default function NotificationBanner() {
+      const [message, setMessage] = useState('Welcome!');
+      const [visible, setVisible] = useState(true);
+
+      const handleAnimationComplete = () => {
+        // Auto-hide after animation completes
+        setTimeout(() => setVisible(false), 2000);
+      };
+
+      return visible ? (
+        <div className="banner">
+          <TextMorph onAnimationComplete={handleAnimationComplete}>
+            {message}
+          </TextMorph>
+        </div>
+      ) : null;
+    }
+    ```
+  </Tab>
+  <Tab title="Vue">
+    ```vue
+    <template>
+      <div v-if="visible" class="banner">
+        <TextMorph 
+          :text="message" 
+          :onAnimationComplete="handleAnimationComplete"
+        />
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref } from 'vue';
+    import { TextMorph } from 'torph/vue';
+
+    const message = ref('Welcome!');
+    const visible = ref(true);
+
+    const handleAnimationComplete = () => {
+      // Auto-hide after animation completes
+      setTimeout(() => visible.value = false, 2000);
+    };
+    </script>
+    ```
+  </Tab>
+  <Tab title="Svelte">
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let message = 'Welcome!';
+      let visible = true;
+
+      const handleAnimationComplete = () => {
+        // Auto-hide after animation completes
+        setTimeout(() => visible = false, 2000);
+      };
+    </script>
+
+    {#if visible}
+      <div class="banner">
+        <TextMorph 
+          text={message} 
+          onAnimationComplete={handleAnimationComplete}
+        />
+      </div>
+    {/if}
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Callbacks are optional. Use them when you need to coordinate animations with other parts of your application.
+</Tip>

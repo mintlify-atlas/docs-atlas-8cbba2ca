@@ -1,0 +1,182 @@
+---
+title: TextMorph
+description: Core TextMorph class API reference for creating and managing text morph animations
+---
+
+## Constructor
+
+Creates a new TextMorph instance.
+
+```typescript
+const morph = new TextMorph(options: TextMorphOptions)
+```
+
+<ParamField path="options" type="TextMorphOptions" required>
+  Configuration options for the TextMorph instance. See [Configuration](/api/configuration) for all available options.
+  
+  <ParamField path="element" type="HTMLElement" required>
+    The DOM element that will contain the morphing text.
+  </ParamField>
+  
+  <ParamField path="duration" type="number" default="400">
+    Animation duration in milliseconds.
+  </ParamField>
+  
+  <ParamField path="ease" type="string" default="cubic-bezier(0.19, 1, 0.22, 1)">
+    CSS cubic-bezier easing function for the animation.
+  </ParamField>
+  
+  <ParamField path="locale" type="Intl.LocalesArgument" default="en">
+    Locale for text segmentation using Intl.Segmenter.
+  </ParamField>
+  
+  <ParamField path="scale" type="boolean" default="true">
+    Whether to apply scale transformation to entering/exiting characters.
+  </ParamField>
+  
+  <ParamField path="disabled" type="boolean" default="false">
+    Disables animations when true.
+  </ParamField>
+  
+  <ParamField path="respectReducedMotion" type="boolean" default="true">
+    Respects user's prefers-reduced-motion setting.
+  </ParamField>
+  
+  <ParamField path="debug" type="boolean" default="false">
+    Enables debug mode with visual outlines.
+  </ParamField>
+  
+  <ParamField path="onAnimationStart" type="() => void">
+    Callback fired when animation starts.
+  </ParamField>
+  
+  <ParamField path="onAnimationComplete" type="() => void">
+    Callback fired when animation completes.
+  </ParamField>
+</ParamField>
+
+### Example
+
+```typescript
+const element = document.querySelector('#morph-container');
+
+const morph = new TextMorph({
+  element,
+  duration: 500,
+  ease: 'cubic-bezier(0.19, 1, 0.22, 1)',
+  scale: true,
+  onAnimationComplete: () => {
+    console.log('Animation finished!');
+  }
+});
+```
+
+## Methods
+
+### update()
+
+Updates the text content and triggers the morph animation.
+
+```typescript
+morph.update(value: string | HTMLElement): void
+```
+
+<ParamField path="value" type="string | HTMLElement" required>
+  The new text content to morph to. Currently only string values are supported.
+</ParamField>
+
+<Note>
+  HTMLElement support is planned but not yet implemented. Passing an HTMLElement will throw an error.
+</Note>
+
+#### Behavior
+
+- If the new value is identical to the current value, no animation occurs
+- If animations are disabled (via `disabled` option or reduced motion preference), the text updates instantly without animation
+- On first call (initial render), no animation occurs
+- Uses FLIP technique to animate character positions smoothly
+
+#### Example
+
+```typescript
+const morph = new TextMorph({ element });
+
+// Initial text (no animation)
+morph.update('Hello');
+
+// Morph to new text (animated)
+morph.update('World');
+
+// No animation if value is the same
+morph.update('World');
+```
+
+### destroy()
+
+Cleans up the TextMorph instance and removes all event listeners and styles.
+
+```typescript
+morph.destroy(): void
+```
+
+#### Behavior
+
+- Removes media query listeners for reduced motion detection
+- Cancels all running animations
+- Removes `torph-root` and `torph-debug` attributes from the element
+- Removes injected styles from the document
+
+#### Example
+
+```typescript
+const morph = new TextMorph({ element });
+morph.update('Hello');
+
+// Later, when component unmounts
+morph.destroy();
+```
+
+<Note>
+  Always call `destroy()` when you're done with a TextMorph instance to prevent memory leaks, especially in single-page applications.
+</Note>
+
+## Static properties
+
+### styleEl
+
+Reference to the global style element injected into the document.
+
+```typescript
+static styleEl: HTMLStyleElement
+```
+
+This is shared across all TextMorph instances to avoid duplicate style injection.
+
+## Animation behavior
+
+### Character tracking
+
+TextMorph uses `Intl.Segmenter` to intelligently split text into grapheme clusters or words:
+
+- **Grapheme mode**: Used for text without spaces, splits by individual characters
+- **Word mode**: Used for text with spaces, splits by words
+- Falls back to simple string splitting in browsers without `Intl.Segmenter` support
+
+### FLIP animation
+
+The library uses the FLIP (First, Last, Invert, Play) technique:
+
+1. **First**: Measure positions before DOM update
+2. **Last**: Update DOM and measure new positions
+3. **Invert**: Calculate the difference and apply reverse transform
+4. **Play**: Animate to natural position
+
+### Entering and exiting characters
+
+- **Entering characters**: Fade in with scale transformation (if enabled), following nearest persistent neighbor's movement
+- **Exiting characters**: Fade out with scale transformation (if enabled), following nearest persistent neighbor's movement
+- **Persistent characters**: Smoothly translate to new positions
+
+### Container sizing
+
+The container element animates its width and height to accommodate the new text dimensions, creating a smooth overall transition.

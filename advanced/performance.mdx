@@ -1,0 +1,397 @@
+---
+title: Performance
+description: Tips and techniques for optimizing Torph animations in production applications
+---
+
+Torph is designed to be performant by default, but there are several techniques you can use to optimize animations for different scenarios.
+
+## Understanding performance characteristics
+
+### Hardware acceleration
+
+Torph uses GPU-accelerated CSS transforms for all animations:
+
+```css
+[torph-item] {
+  will-change: opacity, transform;
+  transform: none;
+  opacity: 1;
+}
+
+[torph-root] {
+  will-change: width, height;
+  transition-property: width, height;
+}
+```
+
+**Key optimizations** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:392-405`):
+
+- `will-change` hints to the browser for layer promotion
+- All motion uses `transform: translate()` instead of `left`/`top`
+- Opacity changes are handled by the GPU
+- Container size uses CSS transitions for smooth resizing
+
+<Info>
+The `will-change` property tells browsers to optimize these properties for animation, typically by promoting elements to their own compositor layer.
+</Info>
+
+### Web Animations API
+
+Torph uses the Web Animations API instead of CSS animations or transitions:
+
+```typescript
+child.animate(
+  {
+    transform: `translate(${deltaX}px, ${deltaY}px)`,
+    offset: 0,
+  },
+  {
+    duration: this.options.duration,
+    easing: this.options.ease,
+    fill: "both",
+  }
+);
+```
+
+**Benefits**:
+
+- Better performance than JavaScript-based animation libraries
+- More control than pure CSS animations
+- Automatic animation cleanup and cancellation
+- Native browser optimization
+
+## When to use disabled mode
+
+The `disabled` option completely bypasses the animation system:
+
+```tsx
+<TextMorph disabled={true}>
+  {text}
+</TextMorph>
+```
+
+**Implementation** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:84-89`, `95-100`):
+
+```typescript
+private isDisabled(): boolean {
+  return Boolean(
+    this.options.disabled ||
+      (this.options.respectReducedMotion && this.prefersReducedMotion)
+  );
+}
+
+if (this.isDisabled()) {
+  if (typeof value === "string") {
+    this.element.textContent = value;
+  }
+  return;
+}
+```
+
+### Use disabled mode when:
+
+<Accordion title="Rendering lists with many TextMorph instances">
+If you have a list with 50+ items that each contain a TextMorph component, consider disabling animations:
+
+```tsx
+{items.map((item) => (
+  <div key={item.id}>
+    <TextMorph disabled={items.length > 50}>
+      {item.text}
+    </TextMorph>
+  </div>
+))}
+```
+
+Each TextMorph instance creates multiple DOM elements and animations. In large lists, this can impact performance.
+</Accordion>
+
+<Accordion title="Server-side rendering or static generation">
+Disable animations during SSR to avoid unnecessary DOM manipulation:
+
+```tsx
+<TextMorph disabled={typeof window === "undefined"}>
+  {text}
+</TextMorph>
+```
+</Accordion>
+
+<Accordion title="Low-powered devices">
+Detect device capabilities and disable on low-end hardware:
+
+```tsx
+const isLowEndDevice = navigator.hardwareConcurrency <= 4;
+
+<TextMorph disabled={isLowEndDevice}>
+  {text}
+</TextMorph>
+```
+</Accordion>
+
+<Accordion title="Text updates faster than animation duration">
+If text changes more frequently than the animation completes, disabled mode prevents animation queue buildup:
+
+```tsx
+const [updateFrequency, setUpdateFrequency] = useState(0);
+const disabled = updateFrequency < 400; // Less than default duration
+
+<TextMorph disabled={disabled} duration={400}>
+  {text}
+</TextMorph>
+```
+</Accordion>
+
+## Optimizing animation settings
+
+### Duration
+
+The default duration is 400ms. Shorter durations can improve perceived performance:
+
+```tsx
+// Faster for small text changes
+<TextMorph duration={250}>
+  {shortText}
+</TextMorph>
+
+// Slower for large text changes
+<TextMorph duration={600}>
+  {longText}
+</TextMorph>
+```
+
+<Tip>
+For counters or frequently updating numbers, use shorter durations (200-300ms) to keep the UI feeling responsive.
+</Tip>
+
+### Easing function
+
+The default easing is `cubic-bezier(0.19, 1, 0.22, 1)` (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:11`):
+
+```tsx
+// Default - smooth and natural
+<TextMorph ease="cubic-bezier(0.19, 1, 0.22, 1)">
+  {text}
+</TextMorph>
+
+// Linear - faster, more mechanical
+<TextMorph ease="linear">
+  {text}
+</TextMorph>
+
+// Ease-out - quick start, slow finish
+<TextMorph ease="ease-out">
+  {text}
+</TextMorph>
+```
+
+Linear easing can feel snappier and slightly more performant for very short animations.
+
+### Scale option
+
+The `scale` option adds a subtle scale effect to new and exiting characters:
+
+```typescript
+transform: `translate(${dx}px, ${dy}px) scale(${isNew ? 0.95 : 1})`
+```
+
+Disabling it reduces the number of transform calculations:
+
+```tsx
+<TextMorph scale={false}>
+  {text}
+</TextMorph>
+```
+
+**Performance impact**: Minimal, but can help on very low-end devices.
+
+## Reducing DOM complexity
+
+### Choose word mode for long text
+
+By default, Torph segments by characters when there are no spaces, or by words when spaces are detected:
+
+```typescript
+const byWord = value.includes(" ");
+```
+
+**Example** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:117`):
+
+```tsx
+// Character mode: creates 11 DOM elements
+<TextMorph>Hello World</TextMorph>
+
+// Word mode: creates 2 DOM elements + space
+<TextMorph>Hello World</TextMorph>
+```
+
+<Note>
+Word mode is automatically enabled when your text contains spaces. For long sentences, this significantly reduces DOM complexity.
+</Note>
+
+### Avoid unnecessary updates
+
+Torph includes built-in change detection:
+
+```typescript
+update(value: HTMLElement | string) {
+  if (value === this.data) return;
+  // ...
+}
+```
+
+But you should still memoize text at the component level:
+
+```tsx
+const displayText = useMemo(() => {
+  return formatUserName(user);
+}, [user.id, user.name]);
+
+<TextMorph>{displayText}</TextMorph>
+```
+
+## Memory management
+
+### Clean up on unmount
+
+The React/Vue/Svelte wrappers automatically call `destroy()`, but if you're using the vanilla class:
+
+```typescript
+const morph = new TextMorph({ element, duration: 400 });
+
+// When done:
+morph.destroy();
+```
+
+**What `destroy()` does** (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:67-78`):
+
+```typescript
+destroy() {
+  if (this.mediaQuery) {
+    this.mediaQuery.removeEventListener(
+      "change",
+      this.handleMediaQueryChange
+    );
+  }
+  this.element.getAnimations().forEach((anim) => anim.cancel());
+  this.element.removeAttribute("torph-root");
+  this.element.removeAttribute("torph-debug");
+  this.removeStyles();
+}
+```
+
+- Removes media query listeners
+- Cancels all active animations
+- Cleans up DOM attributes
+- Removes injected styles
+
+### Shared styles
+
+Torph injects a single `<style>` element shared across all instances:
+
+```typescript
+private addStyles() {
+  if (TextMorph.styleEl) return;
+  // ... create and inject styles
+}
+```
+
+This prevents style duplication even with multiple TextMorph instances on the page.
+
+## Monitoring performance
+
+### Debug mode
+
+Enable debug mode to visualize animation boundaries:
+
+```tsx
+<TextMorph debug={true}>
+  {text}
+</TextMorph>
+```
+
+This adds visual outlines (from `/home/daytona/workspace/source/packages/torph/src/lib/text-morph/index.ts:407-413`):
+
+```css
+[torph-root][torph-debug] {
+  outline: 2px solid magenta;
+}
+[torph-root][torph-debug] [torph-item] {
+  outline: 2px solid cyan;
+  outline-offset: -4px;
+}
+```
+
+### Animation callbacks
+
+Use callbacks to measure animation timing:
+
+```tsx
+const handleStart = () => {
+  performance.mark('morph-start');
+};
+
+const handleComplete = () => {
+  performance.mark('morph-end');
+  performance.measure('morph', 'morph-start', 'morph-end');
+  const measure = performance.getEntriesByName('morph')[0];
+  console.log(`Animation took ${measure.duration}ms`);
+};
+
+<TextMorph 
+  onAnimationStart={handleStart}
+  onAnimationComplete={handleComplete}
+>
+  {text}
+</TextMorph>
+```
+
+### Browser DevTools
+
+Use Chrome DevTools Performance panel:
+
+1. Record a session while text is morphing
+2. Look for:
+   - **Long tasks** (>50ms) during animations
+   - **Layout thrashing** from forced reflows
+   - **Paint operations** on the main thread
+   - **Composite layers** for animated elements
+
+<Warning>
+If you see excessive layout recalculations, ensure you're not triggering reflows by reading layout properties during animations.
+</Warning>
+
+## Performance checklist
+
+<Accordion title="For production applications">
+- ✅ Use `disabled` mode for SSR/SSG
+- ✅ Disable or reduce duration on low-end devices
+- ✅ Memoize text values to prevent unnecessary updates
+- ✅ Use shorter durations for frequently updating text
+- ✅ Properly clean up instances on unmount
+- ✅ Test with many concurrent instances
+- ✅ Monitor performance in production with callbacks
+</Accordion>
+
+<Accordion title="For optimal rendering">
+- ✅ Let word mode activate automatically for long text
+- ✅ Avoid animating very long strings (>100 characters)
+- ✅ Consider pagination or truncation for large text blocks
+- ✅ Use CSS containment on parent elements if needed
+</Accordion>
+
+<Accordion title="For accessibility and UX">
+- ✅ Keep `respectReducedMotion` enabled (it's on by default)
+- ✅ Choose appropriate durations for your use case
+- ✅ Don't animate critical UI text that users need to read immediately
+- ✅ Test animations at different scroll positions and viewport sizes
+</Accordion>
+
+## Summary
+
+Torph is optimized for performance out of the box with GPU-accelerated transforms, the Web Animations API, and shared styles. For best results:
+
+- Use `disabled` mode strategically for large lists or low-end devices
+- Tune `duration` and `ease` to match your use case
+- Leverage word mode for longer text
+- Monitor performance with debug mode and callbacks
+- Clean up properly when components unmount

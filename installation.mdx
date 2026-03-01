@@ -1,0 +1,519 @@
+---
+title: Installation
+description: Install and configure Torph for your framework
+---
+
+# Installation
+
+Torph is available on npm and supports React, Vue, Svelte, and Vanilla JavaScript. Follow the instructions for your framework below.
+
+## Package managers
+
+Install Torph using your preferred package manager:
+
+<CodeGroup>
+```bash npm
+npm install torph
+```
+
+```bash yarn
+yarn add torph
+```
+
+```bash pnpm
+pnpm add torph
+```
+</CodeGroup>
+
+<Note>
+  Torph has **zero dependencies** and a minimal bundle size. Framework peer dependencies (React, Vue, or Svelte) are optional and only required for the respective framework integrations.
+</Note>
+
+## Framework setup
+
+<Tabs>
+  <Tab title="React">
+    ### React installation
+
+    Torph requires React 18 or higher.
+
+    <Steps>
+      <Step title="Install dependencies">
+        If you don't already have React installed:
+
+        <CodeGroup>
+        ```bash npm
+        npm install react react-dom torph
+        ```
+
+        ```bash yarn
+        yarn add react react-dom torph
+        ```
+
+        ```bash pnpm
+        pnpm add react react-dom torph
+        ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="Import the component">
+        ```tsx
+        import { TextMorph } from "torph/react";
+        ```
+      </Step>
+
+      <Step title="Use in your app">
+        ```tsx
+        export default function App() {
+          const [text, setText] = useState("Hello world");
+
+          return <TextMorph>{text}</TextMorph>;
+        }
+        ```
+      </Step>
+    </Steps>
+
+    ### TypeScript support
+
+    Torph includes TypeScript definitions out of the box. Import types as needed:
+
+    ```tsx
+    import { TextMorph, type TextMorphProps } from "torph/react";
+    ```
+
+    ### Next.js setup
+
+    For Next.js applications, the React component works seamlessly:
+
+    ```tsx
+    "use client";
+
+    import { TextMorph } from "torph/react";
+    import { useState } from "react";
+
+    export default function MyComponent() {
+      const [text, setText] = useState("Initial text");
+
+      return <TextMorph>{text}</TextMorph>;
+    }
+    ```
+
+    <Note>
+      The `"use client"` directive is required because Torph manipulates the DOM directly.
+    </Note>
+
+    ### useTextMorph hook
+
+    For more control, use the `useTextMorph` hook:
+
+    ```tsx
+    import { useTextMorph } from "torph/react";
+
+    export default function App() {
+      const { ref, update } = useTextMorph({
+        duration: 500,
+        ease: "ease-out",
+      });
+
+      const handleClick = () => {
+        update("New text!");
+      };
+
+      return (
+        <div>
+          <div ref={ref} />
+          <button onClick={handleClick}>Update</button>
+        </div>
+      );
+    }
+    ```
+  </Tab>
+
+  <Tab title="Vue">
+    ### Vue installation
+
+    Torph requires Vue 3 or higher.
+
+    <Steps>
+      <Step title="Install dependencies">
+        If you don't already have Vue installed:
+
+        <CodeGroup>
+        ```bash npm
+        npm install vue torph
+        ```
+
+        ```bash yarn
+        yarn add vue torph
+        ```
+
+        ```bash pnpm
+        pnpm add vue torph
+        ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="Import the component">
+        ```vue
+        <script setup lang="ts">
+        import { TextMorph } from "torph/vue";
+        </script>
+        ```
+      </Step>
+
+      <Step title="Use in your template">
+        ```vue
+        <template>
+          <TextMorph :text="text" />
+        </template>
+
+        <script setup lang="ts">
+        import { ref } from "vue";
+        import { TextMorph } from "torph/vue";
+
+        const text = ref("Hello world");
+        </script>
+        ```
+      </Step>
+    </Steps>
+
+    ### TypeScript support
+
+    Torph includes TypeScript definitions for Vue:
+
+    ```vue
+    <script setup lang="ts">
+    import { TextMorph, type TextMorphProps } from "torph/vue";
+    </script>
+    ```
+
+    ### Nuxt setup
+
+    For Nuxt 3 applications, Torph works out of the box:
+
+    ```vue
+    <template>
+      <TextMorph :text="text" />
+    </template>
+
+    <script setup lang="ts">
+    import { TextMorph } from "torph/vue";
+
+    const text = ref("Initial text");
+    </script>
+    ```
+
+    <Tip>
+      No additional configuration is needed for Nuxt 3. The component handles SSR gracefully.
+    </Tip>
+  </Tab>
+
+  <Tab title="Svelte">
+    ### Svelte installation
+
+    Torph requires Svelte 4 or higher.
+
+    <Steps>
+      <Step title="Install dependencies">
+        If you don't already have Svelte installed:
+
+        <CodeGroup>
+        ```bash npm
+        npm install svelte torph
+        ```
+
+        ```bash yarn
+        yarn add svelte torph
+        ```
+
+        ```bash pnpm
+        pnpm add svelte torph
+        ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="Import the component">
+        ```svelte
+        <script lang="ts">
+          import { TextMorph } from 'torph/svelte';
+        </script>
+        ```
+      </Step>
+
+      <Step title="Use in your component">
+        ```svelte
+        <script lang="ts">
+          import { TextMorph } from 'torph/svelte';
+
+          let text = "Hello world";
+        </script>
+
+        <TextMorph {text} />
+        ```
+      </Step>
+    </Steps>
+
+    ### TypeScript support
+
+    Torph includes TypeScript definitions for Svelte:
+
+    ```svelte
+    <script lang="ts">
+      import { TextMorph, type TextMorphProps } from 'torph/svelte';
+    </script>
+    ```
+
+    ### SvelteKit setup
+
+    For SvelteKit applications, Torph works seamlessly:
+
+    ```svelte
+    <script lang="ts">
+      import { TextMorph } from 'torph/svelte';
+
+      let text = $state("Initial text");
+    </script>
+
+    <TextMorph {text} />
+    ```
+
+    <Note>
+      Torph handles client-side rendering automatically in SvelteKit.
+    </Note>
+  </Tab>
+
+  <Tab title="Vanilla JS">
+    ### Vanilla JavaScript installation
+
+    Use Torph without any framework.
+
+    <Steps>
+      <Step title="Install the package">
+        <CodeGroup>
+        ```bash npm
+        npm install torph
+        ```
+
+        ```bash yarn
+        yarn add torph
+        ```
+
+        ```bash pnpm
+        pnpm add torph
+        ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="Import and initialize">
+        ```typescript
+        import { TextMorph } from "torph";
+
+        const container = document.getElementById("my-text")!;
+        const morph = new TextMorph({ element: container });
+        ```
+      </Step>
+
+      <Step title="Update text">
+        ```typescript
+        morph.update("New text");
+        ```
+      </Step>
+
+      <Step title="Clean up (optional)">
+        When you're done with the instance:
+
+        ```typescript
+        morph.destroy();
+        ```
+      </Step>
+    </Steps>
+
+    ### Complete example
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Torph Vanilla JS Example</title>
+      </head>
+      <body>
+        <div id="torph-text"></div>
+        <button id="change-text">Change Text</button>
+
+        <script type="module">
+          import { TextMorph } from "torph";
+
+          const container = document.getElementById("torph-text");
+          const morph = new TextMorph({
+            element: container,
+            duration: 400,
+            ease: "cubic-bezier(0.19, 1, 0.22, 1)",
+          });
+
+          const texts = [
+            "Animate Text Easily",
+            "Animate Text Effortlessly",
+            "Animate Text Seamlessly",
+          ];
+
+          let index = 0;
+          morph.update(texts[index]);
+
+          document.getElementById("change-text").addEventListener("click", () => {
+            index = (index + 1) % texts.length;
+            morph.update(texts[index]);
+          });
+        </script>
+      </body>
+    </html>
+    ```
+
+    ### TypeScript support
+
+    Import types from the main package:
+
+    ```typescript
+    import { TextMorph, type TextMorphOptions } from "torph";
+
+    const options: TextMorphOptions = {
+      element: document.getElementById("text")!,
+      duration: 500,
+      ease: "ease-out",
+    };
+
+    const morph = new TextMorph(options);
+    ```
+  </Tab>
+</Tabs>
+
+## Bundler configuration
+
+Torph works with all modern bundlers without additional configuration:
+
+- **Vite** - Works out of the box
+- **Webpack** - No special configuration needed
+- **Rollup** - Compatible with standard ESM output
+- **esbuild** - Fully supported
+- **Parcel** - Works without configuration
+
+## Package exports
+
+Torph uses modern package exports for optimal tree-shaking:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.mjs",
+      "require": "./dist/vue/index.js"
+    },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "import": "./dist/svelte/index.mjs",
+      "require": "./dist/svelte/index.js"
+    }
+  }
+}
+```
+
+This ensures you only bundle what you use.
+
+## Verification
+
+To verify your installation is working:
+
+<Steps>
+  <Step title="Check the package version">
+    <CodeGroup>
+    ```bash npm
+    npm list torph
+    ```
+
+    ```bash yarn
+    yarn list torph
+    ```
+
+    ```bash pnpm
+    pnpm list torph
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Run a test import">
+    Create a simple test file and verify no import errors occur.
+  </Step>
+
+  <Step title="Check browser console">
+    Run your app and check that no errors appear in the browser console.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Module not found errors">
+    Ensure you're importing from the correct subpath:
+    - React: `torph/react`
+    - Vue: `torph/vue`
+    - Svelte: `torph/svelte`
+    - Vanilla: `torph`
+
+    Check that your bundler supports package exports (all modern bundlers do).
+  </Accordion>
+
+  <Accordion title="TypeScript errors">
+    Make sure your `tsconfig.json` includes:
+    ```json
+    {
+      "compilerOptions": {
+        "moduleResolution": "bundler", // or "node16"
+        "esModuleInterop": true
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="SSR/SSG issues">
+    Torph requires access to the DOM. For SSR frameworks:
+    - **Next.js**: Use `"use client"` directive
+    - **Nuxt**: Component handles SSR automatically
+    - **SvelteKit**: Works client-side by default
+  </Accordion>
+
+  <Accordion title="Animation not working">
+    Check that:
+    1. Text is actually changing (not the same value)
+    2. User doesn't have `prefers-reduced-motion` enabled (unless you want to disable this with `respectReducedMotion={false}`)
+    3. The `disabled` prop is not set to `true`
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Build your first animated text component
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api/configuration"
+  >
+    Explore all available options and props
+  </Card>
+</CardGroup>
